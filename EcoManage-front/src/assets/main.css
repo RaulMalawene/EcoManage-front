@@ -1,0 +1,70 @@
+/* ---------------------------------------------------------------------
+ * EcoManage — design tokens base
+ * Pequeno "design system" em CSS puro partilhado por todas as telas.
+ * ------------------------------------------------------------------- */
+
+:root {
+  /* marca — tons de verde (eco) */
+  --cor-primaria-50: #ecfdf3;
+  --cor-primaria-100: #d1fae0;
+  --cor-primaria-200: #a7f3c8;
+  --cor-primaria-400: #34b46a;
+  --cor-primaria-500: #1f9d57;
+  --cor-primaria-600: #167d45;
+  --cor-primaria-700: #146339;
+
+  /* neutros */
+  --cor-texto: #16211c;
+  --cor-texto-suave: #5c6b64;
+  --cor-fundo: #f5f8f6;
+  --cor-superficie: #ffffff;
+  --cor-borda: #dfe7e2;
+
+  /* feedback */
+  --cor-erro: #d9432e;
+  --cor-erro-fundo: #fdecea;
+
+  /* forma */
+  --raio: 12px;
+  --raio-sm: 8px;
+  --sombra: 0 8px 24px -8px rgb(22 33 28 / 0.16);
+  --sombra-foco: 0 0 0 3px rgb(31 157 87 / 0.25);
+
+  --fonte: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fonte);
+  color: var(--cor-texto);
+  background: var(--cor-fundo);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100%;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--cor-primaria-600);
+}
