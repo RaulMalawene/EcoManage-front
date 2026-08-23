@@ -8,7 +8,7 @@ const router = useRouter()
 const route = useRoute()
 
 const form = reactive({
-  email: '',
+  username: '',
   palavraPasse: '',
 })
 
@@ -16,10 +16,9 @@ const mostrarPalavraPasse = ref(false)
 const tentouSubmeter = ref(false)
 
 // --- validação simples no cliente ------------------------------------
-const erroEmail = computed(() => {
+const erroUsername = computed(() => {
   if (!tentouSubmeter.value) return ''
-  if (!form.email.trim()) return 'Indica o teu email.'
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Email inválido.'
+  if (!form.username.trim()) return 'Indica o teu nome de utilizador.'
   return ''
 })
 
@@ -29,7 +28,7 @@ const erroPalavraPasse = computed(() => {
   return ''
 })
 
-const formularioValido = computed(() => !erroEmail.value && !erroPalavraPasse.value)
+const formularioValido = computed(() => !erroUsername.value && !erroPalavraPasse.value)
 
 async function submeter() {
   tentouSubmeter.value = true
@@ -37,7 +36,7 @@ async function submeter() {
 
   if (!formularioValido.value) return
 
-  const sucesso = await auth.entrar(form.email.trim(), form.palavraPasse)
+  const sucesso = await auth.entrar(form.username.trim(), form.palavraPasse)
   if (sucesso) {
     const destino = typeof route.query.redirect === 'string' ? route.query.redirect : { name: 'dashboard' }
     router.push(destino)
@@ -56,7 +55,7 @@ async function submeter() {
               d="M12 21c-4.5-3-8-6.5-8-11a6 6 0 0 1 11-3.3A6 6 0 0 1 20 10c0 4.5-3.5 8-8 11Z"
             />
           </svg>
-          <span>EcoManage</span>
+          <span>Jay Recicly</span>
         </div>
         <h1>Gestão simples para operações mais sustentáveis.</h1>
         <p>Pessoas, materiais e compras — tudo num só lugar, pronto para a tua equipa.</p>
@@ -73,7 +72,7 @@ async function submeter() {
                 d="M12 21c-4.5-3-8-6.5-8-11a6 6 0 0 1 11-3.3A6 6 0 0 1 20 10c0 4.5-3.5 8-8 11Z"
               />
             </svg>
-            <span>EcoManage</span>
+            <span>Jay Recicly</span>
           </div>
         </div>
 
@@ -86,19 +85,19 @@ async function submeter() {
 
         <form novalidate @submit.prevent="submeter">
           <div class="campo">
-            <label for="email">Email</label>
+            <label for="username">Utilizador</label>
             <input
-              id="email"
-              v-model="form.email"
-              type="email"
+              id="username"
+              v-model="form.username"
+              type="text"
               autocomplete="username"
-              placeholder="nome@empresa.com"
-              :aria-invalid="!!erroEmail"
-              :aria-describedby="erroEmail ? 'email-erro' : undefined"
+              placeholder="o teu nome de utilizador"
+              :aria-invalid="!!erroUsername"
+              :aria-describedby="erroUsername ? 'username-erro' : undefined"
               :disabled="auth.aCarregar"
               autofocus
             />
-            <span v-if="erroEmail" id="email-erro" class="campo__erro">{{ erroEmail }}</span>
+            <span v-if="erroUsername" id="username-erro" class="campo__erro">{{ erroUsername }}</span>
           </div>
 
           <div class="campo">

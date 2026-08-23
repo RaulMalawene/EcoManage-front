@@ -23,6 +23,10 @@
   /* feedback */
   --cor-erro: #d9432e;
   --cor-erro-fundo: #fdecea;
+  --cor-aviso: #c2691f;
+  --cor-aviso-fundo: #fdf1e6;
+  --cor-neutra-texto: #5c6b64;
+  --cor-neutra-fundo: #eef2f0;
 
   /* forma */
   --raio: 12px;
@@ -67,4 +71,269 @@ button {
 
 a {
   color: var(--cor-primaria-600);
+}
+
+/* ---------------------------------------------------------------------
+ * Componentes partilhados entre telas (Painel, Livro-caixa, e as
+ * próximas). Mantidos aqui — não em <style scoped> — precisamente para
+ * que todas as telas internas fiquem visualmente em conformidade sem
+ * duplicar regras em cada ficheiro.
+ * ------------------------------------------------------------------- */
+
+/* ---- Bloco/painel genérico (cartão branco com cabeçalho) ---- */
+.painel-bloco {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 24px;
+  box-shadow: var(--sombra);
+}
+.painel-bloco__cabecalho {
+  margin-bottom: 18px;
+}
+.painel-bloco__cabecalho h2 {
+  font-size: 18px;
+  margin: 0 0 4px;
+  color: var(--cor-texto);
+}
+.painel-bloco__cabecalho p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--cor-texto-suave);
+}
+
+/* ---- Cartões de KPI ---- */
+.card-kpi {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 20px;
+  box-shadow: var(--sombra);
+}
+.card-kpi--destaque {
+  background: linear-gradient(120deg, var(--cor-primaria-700), var(--cor-primaria-500));
+  border-color: transparent;
+}
+.card-kpi--destaque .card-kpi__rotulo {
+  color: rgb(255 255 255 / 0.85);
+}
+.card-kpi--destaque .card-kpi__valor {
+  color: #fff;
+}
+.card-kpi__topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.card-kpi__rotulo {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cor-texto-suave);
+  padding-top: 2px;
+}
+.card-kpi__icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.card-kpi__icone--verde {
+  background: var(--cor-primaria-50);
+  color: var(--cor-primaria-600);
+}
+.card-kpi__icone--escuro {
+  background: var(--cor-neutra-fundo);
+  color: var(--cor-texto);
+}
+.card-kpi__icone--destaque {
+  background: var(--cor-primaria-100);
+  color: var(--cor-primaria-700);
+}
+.card-kpi__valor {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.card-kpi__valor--verde {
+  color: var(--cor-primaria-600);
+}
+.card-kpi__valor--escuro {
+  color: var(--cor-texto);
+}
+.card-kpi__valor--destaque {
+  color: var(--cor-primaria-700);
+}
+.card-kpi__valor--vermelho {
+  color: var(--cor-erro);
+}
+.card-kpi__icone--vermelho {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+/* Dentro de um cartão em destaque (fundo em gradiente), o selo do ícone
+   fica sempre num tom claro translúcido, seja qual for a cor semântica. */
+.card-kpi--destaque .card-kpi__icone {
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
+}
+
+/* ---- Estados de carregamento / erro ---- */
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--cor-texto-suave);
+  padding: 48px 0;
+  text-align: center;
+  font-size: 14px;
+}
+.estado--erro {
+  color: var(--cor-erro);
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2.5px solid var(--cor-primaria-100);
+  border-top-color: var(--cor-primaria-500);
+  border-radius: 50%;
+  animation: girar 0.6s linear infinite;
+}
+.spinner--claro {
+  width: 15px;
+  height: 15px;
+  border-width: 2px;
+  border-color: rgb(255 255 255 / 0.4);
+  border-top-color: #fff;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Botões ---- */
+.botao-primario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.65rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--cor-primaria-500);
+  border: none;
+  border-radius: var(--raio-sm);
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+}
+.botao-primario:hover:not(:disabled) {
+  background: var(--cor-primaria-600);
+}
+.botao-secundario {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-sm);
+  cursor: pointer;
+  font-family: inherit;
+}
+.botao-secundario:hover:not(:disabled) {
+  background: var(--cor-neutra-fundo);
+}
+.botao-fantasma {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  background: var(--cor-superficie);
+  border: 1.5px solid var(--cor-borda);
+  border-radius: var(--raio-sm);
+  cursor: not-allowed;
+  font-family: inherit;
+}
+.botao-fantasma small {
+  font-size: 10px;
+  background: var(--cor-neutra-fundo);
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+.botao-primario:disabled,
+.botao-secundario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- Tabela genérica ---- */
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tabela th {
+  text-align: left;
+  font-size: 12px;
+  color: var(--cor-texto-suave);
+  font-weight: 600;
+  padding: 10px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+.tabela td {
+  padding: 13px 10px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--cor-neutra-fundo);
+  color: var(--cor-texto);
+  vertical-align: middle;
+}
+.tabela .ao-fim {
+  text-align: right;
+}
+.tabela .ao-centro {
+  text-align: center;
+}
+.tabela .nowrap {
+  white-space: nowrap;
+}
+
+/* ---- Etiqueta de estado ---- */
+.etiqueta {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.etiqueta--pendente {
+  background: var(--cor-neutra-fundo);
+  color: var(--cor-neutra-texto);
+}
+.etiqueta--atrasado {
+  background: var(--cor-aviso-fundo);
+  color: var(--cor-aviso);
+}
+.etiqueta--liquidado,
+.etiqueta--concluido {
+  background: var(--cor-primaria-50);
+  color: var(--cor-primaria-700);
+}
+
+.vazio {
+  color: var(--cor-texto-suave);
+  font-size: 14px;
+  padding: 20px 0;
+  text-align: center;
 }

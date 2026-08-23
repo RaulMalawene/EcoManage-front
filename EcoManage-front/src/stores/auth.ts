@@ -1,17 +1,37 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import axios from 'axios'
+import api from '@/services/api'
 
-/**
- * Utilizador autenticado, tal como devolvido pela API Laravel
- * (ex.: rota /api/me ou incluído na resposta de /api/login).
- */
+/** Utilizador autenticado, tal como devolvido pela API (GET /me, POST /login). */
 export interface Utilizador {
   id: number
   nome: string
-  email: string
+  username: string
+  email: string | null
+  perfil: string
+  perfil_rotulo: string
+  activo: boolean
+}
+
+/** Corpo de erro devolvido pela API em falhas de validação/autenticação. */
+interface ErroApi {
+  sucesso: false
+  mensagem: string
+  erros: Record<string, string[]> | null
 }
 
 const CHAVE_TOKEN = 'ecomanage.token'
+
+/** Extrai a mensagem mais específica de um erro da API (campo > geral). */
+function extrairMensagemErro(e: unknown, fallback: string): string {
+  if (axios.isAxiosError<ErroApi>(e)) {
+    const dados = e.response?.data
+    const primeiroErroDeCampo = dados?.erros && Object.values(dados.erros).flat()[0]
+    return primeiroErroDeCampo || dados?.mensagem || fallback
+  }
+  return e instanceof Error ? e.message : fallback
+}
 
 export const useAuthStore = defineStore('auth', () => {
   // --- estado ---------------------------------------------------------
@@ -24,54 +44,68 @@ export const useAuthStore = defineStore('auth', () => {
   const autenticado = computed(() => !!token.value)
 
   // --- ações -------------------------------------------------------------
-  /**
-   * Autentica contra a API Laravel (Sanctum - token de API).
-   * TODO: ajustar o endpoint/URL base quando a API estiver ligada
-   * (ex.: import.meta.env.VITE_API_URL + '/api/login').
-   */
-  async function entrar(email: string, palavraPasse: string) {
+  /** Autentica contra a API (POST /login -> { token, utilizador }). */
+  async function entrar(username: string, palavraPasse: string) {
     aCarregar.value = true
     erro.value = null
 
     try {
-      const resposta = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ email, password: palavraPasse }),
-      })
+      const resposta = await api.post('/login', { username, password: palavraPasse })
 
-      if (!resposta.ok) {
-        const dados = await resposta.json().catch(() => null)
-        throw new Error(dados?.message ?? 'Credenciais inválidas. Verifica o email e a palavra-passe.')
-      }
+      token.value = resposta.data.token
+      utilizador.value = resposta.data.utilizador
 
-      const dados = await resposta.json()
+      if (!token.value) throw new Error('Resposta de login sem token.')
 
-      token.value = dados.token
-      utilizador.value = dados.user ?? null
-      localStorage.setItem(CHAVE_TOKEN, dados.token)
-
+      localStorage.setItem(CHAVE_TOKEN, token.value)
       return true
     } catch (e) {
-      erro.value = e instanceof Error ? e.message : 'Não foi possível iniciar sessão. Tenta novamente.'
+      erro.value = extrairMensagemErro(e, 'Não foi possível iniciar sessão. Tenta novamente.')
       return false
     } finally {
       aCarregar.value = false
     }
   }
 
-  function sair() {
-    token.value = null
-    utilizador.value = null
-    localStorage.removeItem(CHAVE_TOKEN)
+  /**
+   * Recupera o utilizador autenticado a partir do token guardado
+   * (chamado no arranque da app, para repor o nome/perfil após um refresh).
+   */
+  async function carregarUtilizador() {
+    if (!token.value || utilizador.value) return
+    try {
+      const resposta = await api.get('/me')
+      utilizador.value = resposta.data.utilizador
+    } catch {
+      // O interceptor da API já trata o 401 (limpa sessão e manda para o login).
+    }
+  }
+
+  async function sair() {
+    try {
+      if (token.value) await api.post('/logout')
+    } catch {
+      // Mesmo que a API falhe a invalidar o token, a sessão local é sempre limpa.
+    } finally {
+      token.value = null
+      utilizador.value = null
+      localStorage.removeItem(CHAVE_TOKEN)
+    }
   }
 
   function limparErro() {
     erro.value = null
   }
 
-  return { token, utilizador, aCarregar, erro, autenticado, entrar, sair, limparErro }
+  return {
+    token,
+    utilizador,
+    aCarregar,
+    erro,
+    autenticado,
+    entrar,
+    carregarUtilizador,
+    sair,
+    limparErro,
+  }
 })

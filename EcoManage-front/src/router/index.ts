@@ -21,6 +21,12 @@ const router = createRouter({
       component: () => import('@/views/DashboardView.vue'),
       meta: { requerAuth: true },
     },
+    {
+      path: '/livro-caixa',
+      name: 'caixa',
+      component: () => import('@/views/CaixaView.vue'),
+      meta: { requerAuth: true },
+    },
     // (Próximas telas — pessoas, materiais, compras... — entram aqui
     //  com meta.requerAuth.)
   ],
@@ -31,15 +37,21 @@ const router = createRouter({
  *  - Sem sessão a tentar entrar numa rota protegida -> vai para o login.
  *  - Com sessão a tentar abrir o login -> vai para o dashboard.
  */
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
   if (to.meta.requerAuth && !auth.autenticado) {
-    return { name: 'login' }
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.soVisitante && auth.autenticado) {
     return { name: 'dashboard' }
+  }
+
+  // Após um refresh de página só o token sobrevive (em localStorage);
+  // repõe o nome/perfil do utilizador antes de mostrar telas protegidas.
+  if (to.meta.requerAuth && auth.autenticado && !auth.utilizador) {
+    await auth.carregarUtilizador()
   }
 })
 
