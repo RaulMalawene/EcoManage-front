@@ -27,6 +27,12 @@ const router = createRouter({
       component: () => import('@/views/CaixaView.vue'),
       meta: { requerAuth: true },
     },
+    {
+      path: '/vendas',
+      name: 'vendas',
+      component: () => import('@/views/VendasView.vue'),
+      meta: { requerAuth: true },
+    },
     // (Próximas telas — pessoas, materiais, compras... — entram aqui
     //  com meta.requerAuth.)
   ],

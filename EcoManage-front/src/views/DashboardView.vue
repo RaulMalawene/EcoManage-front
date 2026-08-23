@@ -6,13 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
 import { mt } from '@/utils/formato'
-
-interface ResumoDashboard {
-  saldo_caixa: number
-  total_em_divida: number
-  valor_stock: number
-  mes_corrente?: { lucro_liquido: number }
-}
+import type { ResumoDashboard, MaterialStock } from '@/types/api'
 
 interface Devedor {
   id: number
@@ -20,19 +14,6 @@ interface Devedor {
   saldo_devedor: number
   data_vencimento: string | null
   estado: 'vencido' | 'em_dia' | 'liquidado' | string
-}
-
-interface MaterialStock {
-  id: number
-  nome: string
-  preco_compra_kg: number
-  preco_venda_kg: number
-  stock_kg: number
-  custo_medio_kg: number
-  limite_alerta_kg: number | null
-  valor_stock: number
-  em_alerta: boolean
-  activo: boolean
 }
 
 const auth = useAuthStore()
@@ -444,13 +425,6 @@ async function guardarStock() {
   max-width: 520px;
 }
 
-.cartoes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 22px;
-}
-
 .graficos,
 .tabelas {
   display: grid;
@@ -524,143 +498,9 @@ async function guardarStock() {
   border-color: var(--cor-primaria-400);
 }
 
-/* --- Modal: adicionar stock --- */
-.modal-veu {
-  position: fixed;
-  inset: 0;
-  background: rgb(22 33 28 / 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 50;
-}
-.modal-cartao {
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: var(--cor-superficie);
-  border-radius: var(--raio);
-  box-shadow: 0 20px 60px -12px rgb(22 33 28 / 0.35);
-}
-.modal-cabecalho {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--cor-borda);
-  position: sticky;
-  top: 0;
-  background: var(--cor-superficie);
-}
-.modal-cabecalho h3 {
-  font-size: 17px;
-  color: var(--cor-texto);
-}
-.modal-fechar {
-  background: none;
-  border: none;
-  color: var(--cor-texto-suave);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: var(--raio-sm);
-}
-.modal-fechar:hover {
-  background: var(--cor-fundo);
-  color: var(--cor-texto);
-}
-.modal-form {
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.alternador {
-  display: flex;
-  background: var(--cor-fundo);
-  border-radius: var(--raio-sm);
-  padding: 3px;
-  gap: 2px;
-}
-.alternador__opcao {
-  flex: 1;
-  padding: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--cor-texto-suave);
-  background: none;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.alternador__opcao--activa {
-  background: var(--cor-superficie);
-  color: var(--cor-primaria-700);
-  box-shadow: 0 1px 3px rgb(22 33 28 / 0.12);
-}
-.campo-modal {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.campo-modal label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--cor-texto);
-}
-.campo-modal label small {
-  font-weight: 400;
-  color: var(--cor-texto-suave);
-}
-.campo-modal input,
-.campo-modal select {
-  padding: 0.6rem 0.75rem;
-  font-size: 0.9rem;
-  font-family: inherit;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-sm);
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-}
-.campo-modal input:focus-visible,
-.campo-modal select:focus-visible {
-  outline: none;
-  border-color: var(--cor-primaria-500);
-  box-shadow: var(--sombra-foco);
-}
-.campo-modal__erro {
-  font-size: 12px;
-  color: var(--cor-erro);
-}
-.campo-modal-grupo {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.modal-alerta {
-  padding: 0.65rem 0.8rem;
-  border-radius: var(--raio-sm);
-  background: var(--cor-erro-fundo);
-  color: var(--cor-erro);
-  font-size: 0.85rem;
-}
-.modal-rodape {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
 @media (max-width: 900px) {
   .graficos,
   .tabelas {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .campo-modal-grupo {
     grid-template-columns: 1fr;
   }
 }

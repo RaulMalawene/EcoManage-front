@@ -17,7 +17,7 @@ const itens = [
   { nome: 'Painel', rota: 'dashboard', pronto: true, icone: 'painel' },
   { nome: 'Livro-caixa', rota: 'caixa', pronto: true, icone: 'caixa' },
   { nome: 'Compras', rota: 'compras', pronto: false, icone: 'compras' },
-  { nome: 'Vendas', rota: 'vendas', pronto: false, icone: 'vendas' },
+  { nome: 'Vendas', rota: 'vendas', pronto: true, icone: 'vendas' },
   { nome: 'Empréstimos & Dívidas', rota: 'emprestimos', pronto: false, icone: 'emprestimos' },
   { nome: 'Materiais & Stock', rota: 'materiais', pronto: false, icone: 'materiais' },
   { nome: 'Despesas', rota: 'despesas', pronto: false, icone: 'despesas' },

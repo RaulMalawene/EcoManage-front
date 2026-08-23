@@ -5,6 +5,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
 import { mt, dataCurta, dataIsoLocal } from '@/utils/formato'
+import type { Paginacao } from '@/types/api'
 
 interface Movimento {
   id: number
@@ -14,12 +15,6 @@ interface Movimento {
   origem_tipo: string | null
   tipo: 'entrada' | 'saida' | string
   valor: number
-}
-
-interface Paginacao {
-  pagina: number
-  ultima_pagina: number
-  total: number
 }
 
 interface Fluxo {
@@ -168,7 +163,7 @@ const paginas = computed(() => {
 
     <!-- Tabela -->
     <section class="painel-bloco">
-      <div class="tabela__topo">
+      <div class="painel-bloco__topo">
         <h2>Histórico de Transações</h2>
         <div class="filtros">
           <input v-model="pesquisa" type="text" placeholder="Pesquisar descrição…" class="filtro-pesquisa" />
@@ -249,29 +244,6 @@ const paginas = computed(() => {
 </template>
 
 <style scoped>
-.cabecalho {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-.cabecalho h1 {
-  font-size: 26px;
-  margin: 0 0 4px;
-  color: var(--cor-texto);
-}
-.cabecalho p {
-  margin: 0;
-  color: var(--cor-texto-suave);
-  font-size: 14px;
-}
-.cabecalho__accoes {
-  display: flex;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
 .nota {
   display: flex;
   align-items: center;
@@ -287,46 +259,10 @@ const paginas = computed(() => {
   flex-shrink: 0;
 }
 
-.cartoes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-bottom: 22px;
-}
-
-.tabela__topo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.tabela__topo h2 {
-  font-size: 18px;
-  margin: 0;
-  color: var(--cor-texto);
-}
 .filtros {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-}
-.filtro-pesquisa,
-.filtro-select {
-  padding: 9px 12px;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-sm);
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--cor-texto);
-  background: var(--cor-superficie);
-}
-.filtro-pesquisa:focus-visible,
-.filtro-select:focus-visible {
-  outline: none;
-  border-color: var(--cor-primaria-500);
-  box-shadow: var(--sombra-foco);
 }
 
 .descricao {
@@ -344,53 +280,4 @@ const paginas = computed(() => {
   white-space: nowrap;
 }
 
-.paginacao {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 18px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.paginacao__info {
-  font-size: 13px;
-  color: var(--cor-texto-suave);
-}
-.paginacao__botoes {
-  display: flex;
-  gap: 6px;
-}
-.pg-btn {
-  padding: 7px 13px;
-  border: 1px solid var(--cor-borda);
-  background: var(--cor-superficie);
-  border-radius: var(--raio-sm);
-  font-size: 13px;
-  cursor: pointer;
-  color: var(--cor-texto-suave);
-  font-family: inherit;
-}
-.pg-btn:hover:not(:disabled) {
-  border-color: var(--cor-primaria-500);
-  color: var(--cor-primaria-600);
-}
-.pg-btn--activo {
-  background: var(--cor-primaria-500);
-  color: #fff;
-  border-color: var(--cor-primaria-500);
-}
-.pg-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 900px) {
-  .cabecalho {
-    flex-direction: column;
-  }
-  .tabela__topo {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
 </style>
