@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
+import { Bar, Doughnut } from 'vue-chartjs'
 import AppLayout from '@/components/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
 import { mt } from '@/utils/formato'
+import { mtCompacto } from '@/utils/graficos'
+import { PALETA, CORES_CATEGORICAS } from '@/utils/paleta'
 import type { ResumoDashboard, MaterialStock } from '@/types/api'
+import '@/utils/graficos' // regista os componentes do Chart.js usados nesta app
 
 interface Devedor {
   id: number
@@ -61,6 +65,117 @@ const cartoes = computed(() => {
     { rotulo: 'Lucro do mês', valor: d.mes_corrente?.lucro_liquido, cor: 'destaque', icone: 'relatorios' },
   ]
 })
+
+// Composição de stock por material (valor imobilizado) — dados que já
+// vinham em GET /materiais, sem precisar de nenhum endpoint novo. Mostra os
+// 4 materiais de maior valor e agrupa o resto em "Outros" (nunca mais de 5
+// fatias, para as cores categóricas não precisarem de repetir).
+const composicaoStock = computed(() => {
+  const ordenados = [...materiais.value].filter((m) => m.valor_stock > 0).sort((a, b) => b.valor_stock - a.valor_stock)
+  const principais = ordenados.slice(0, 4).map((m, i) => ({ nome: m.nome, valor: m.valor_stock, cor: CORES_CATEGORICAS[i] }))
+  const resto = ordenados.slice(4).reduce((s, m) => s + m.valor_stock, 0)
+  if (resto > 0) principais.push({ nome: 'Outros materiais', valor: resto, cor: CORES_CATEGORICAS[4] })
+  return principais
+})
+
+const dadosComposicaoStock = computed(() => ({
+  labels: composicaoStock.value.map((c) => c.nome),
+  datasets: [
+    {
+      data: composicaoStock.value.map((c) => c.valor),
+      backgroundColor: composicaoStock.value.map((c) => c.cor),
+      borderColor: PALETA.superficie,
+      borderWidth: 2,
+      hoverOffset: 6,
+    },
+  ],
+}))
+
+const opcoesComposicaoStock = computed<any>(() => {
+  const total = composicaoStock.value.reduce((s, c) => s + c.valor, 0)
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 8, padding: 12 } },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => {
+            const pct = total > 0 ? Math.round((ctx.raw / total) * 100) : 0
+            return ` ${mt(ctx.raw)} (${pct}%)`
+          },
+        },
+      },
+      datalabels: { display: false },
+    },
+  }
+})
+
+// --- Fluxo de caixa mensal --------------------------------------------
+// GET /caixa/fluxo-mensal?meses=6 — endpoint NOVO, ainda por criar no
+// backend (ver prompt fornecido ao dono). Devolve, do mês mais antigo para
+// o mais recente, {mes, mes_rotulo, entradas, saidas, saldo_periodo}. Sem
+// ele, o painel mostra "sem dados" em vez de rebentar a tela.
+interface FluxoMensal {
+  mes: string
+  mes_rotulo: string
+  entradas: number
+  saidas: number
+  saldo_periodo: number
+}
+
+const fluxoMensal = ref<FluxoMensal[]>([])
+const aCarregarFluxo = ref(true)
+
+async function carregarFluxoMensal() {
+  aCarregarFluxo.value = true
+  try {
+    const { data } = await api.get('/caixa/fluxo-mensal', { params: { meses: 6 } })
+    fluxoMensal.value = data.dados || []
+  } catch {
+    fluxoMensal.value = []
+  } finally {
+    aCarregarFluxo.value = false
+  }
+}
+
+onMounted(carregarFluxoMensal)
+
+const dadosFluxoMensal = computed(() => ({
+  labels: fluxoMensal.value.map((m) => m.mes_rotulo),
+  datasets: [
+    {
+      label: 'Entradas',
+      data: fluxoMensal.value.map((m) => m.entradas),
+      backgroundColor: PALETA.primaria500,
+      borderRadius: 4,
+      barPercentage: 0.7,
+      categoryPercentage: 0.6,
+    },
+    {
+      label: 'Saídas',
+      data: fluxoMensal.value.map((m) => m.saidas),
+      backgroundColor: PALETA.erro,
+      borderRadius: 4,
+      barPercentage: 0.7,
+      categoryPercentage: 0.6,
+    },
+  ],
+}))
+
+const opcoesFluxoMensal = computed<any>(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    x: { grid: { display: false }, border: { display: false } },
+    y: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+  },
+  plugins: {
+    legend: { position: 'top', align: 'start' },
+    tooltip: { callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${mt(ctx.parsed.y)}` } },
+  },
+}))
 
 function estadoDevedor(estado: string) {
   const mapa: Record<string, { texto: string; classe: string }> = {
@@ -204,27 +319,29 @@ async function guardarStock() {
             <h2>Fluxo de Caixa Mensal</h2>
             <p>Comparativo entre entradas e saídas de capital</p>
           </div>
-          <div class="em-breve">
+          <div v-if="aCarregarFluxo" class="estado">
+            <span class="spinner" aria-hidden="true"></span>
+          </div>
+          <div v-else-if="fluxoMensal.length === 0" class="em-breve">
             <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M3 3v18h18M7 14l3-3 3 3 5-5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <p>Gráfico diário em breve</p>
-            <small>Já disponível: totais em Livro-caixa → Fluxo</small>
+            <p>Sem dados de fluxo mensal ainda</p>
+            <small>Liga-se automaticamente quando o endpoint <code>/caixa/fluxo-mensal</code> existir no backend</small>
+          </div>
+          <div v-else class="grafico-alto">
+            <Bar :data="dadosFluxoMensal" :options="opcoesFluxoMensal" />
           </div>
         </div>
 
         <div class="painel-bloco">
           <div class="painel-bloco__cabecalho">
             <h2>Composição de Stock</h2>
-            <p>Valor total por categoria de material</p>
+            <p>Valor imobilizado por material</p>
           </div>
-          <div class="em-breve">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 3v9l6 4" stroke-linecap="round" />
-            </svg>
-            <p>Composição por categoria em breve</p>
-            <small>Valor total do stock: {{ mt(dashboard?.valor_stock) }}</small>
+          <p v-if="composicaoStock.length === 0" class="vazio">Ainda não há stock com valor registado.</p>
+          <div v-else class="grafico-alto">
+            <Doughnut :data="dadosComposicaoStock" :options="opcoesComposicaoStock" />
           </div>
         </div>
       </section>
@@ -446,6 +563,12 @@ async function guardarStock() {
 }
 .em-breve small {
   font-size: 12px;
+}
+
+/* ---- Contentor dos gráficos Chart.js (precisam de altura fixa no pai) ---- */
+.grafico-alto {
+  position: relative;
+  height: 280px;
 }
 
 .stock-lista {

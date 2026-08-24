@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { Bar, Line } from 'vue-chartjs'
 import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { mt, dataIsoLocal } from '@/utils/formato'
+import { mtCompacto } from '@/utils/graficos'
+import { PALETA } from '@/utils/paleta'
+import '@/utils/graficos' // regista os componentes do Chart.js usados nesta app
 
 interface Dre {
   periodo: { inicio: string; fim: string }
@@ -50,22 +54,143 @@ onMounted(carregar)
 // O lucro é positivo? Muda a cor e a mensagem do resumo em toda a tela.
 const temLucro = computed(() => (dre.value?.lucro_liquido || 0) >= 0)
 
-// As linhas do DRE, em camadas, para a tabela principal — a MESMA conta
-// que o DreService devolve, sem nenhum cálculo feito aqui: só formatação.
+// --- Gráfico em cascata (waterfall) do DRE ---------------------------------
+// Cada barra parte de onde a anterior chegou — a visualização correcta para
+// uma demonstração de resultados, em vez de uma tabela. Os pontos de
+// partida/chegada usam sempre um valor que o backend já devolveu
+// directamente (receita_vendas, lucro_bruto, resultado_operacional,
+// lucro_liquido) ou uma soma simples entre dois desses valores — nunca um
+// cálculo novo, para não haver risco de desalinhar do que o DreService diz.
 const linhasDre = computed(() => {
   if (!dre.value) return []
   const d = dre.value
+  const juros = d.outras_receitas?.juros_emprestimos || 0
+  const posJuros = d.lucro_bruto + juros
   return [
-    { rotulo: 'Receita de vendas', valor: d.receita_vendas, tipo: 'entrada', nivel: 0 },
-    { rotulo: '(−) Custo dos materiais vendidos', valor: -d.custo_materiais_vendidos, tipo: 'saida', nivel: 1 },
-    { rotulo: '= Lucro bruto', valor: d.lucro_bruto, tipo: 'subtotal', nivel: 0, margem: d.margem_bruta_pct },
-    { rotulo: '(+) Juros de empréstimos', valor: d.outras_receitas?.juros_emprestimos || 0, tipo: 'entrada', nivel: 1 },
-    { rotulo: '(−) Despesas operacionais', valor: -d.despesas_operacionais, tipo: 'saida', nivel: 1 },
-    { rotulo: '= Resultado operacional', valor: d.resultado_operacional, tipo: 'subtotal', nivel: 0 },
-    { rotulo: '(−) Impostos e outros', valor: -d.impostos_outros, tipo: 'saida', nivel: 1 },
-    { rotulo: '= Lucro líquido', valor: d.lucro_liquido, tipo: 'total', nivel: 0, margem: d.margem_liquida_pct },
+    { rotulo: 'Receita de vendas', valor: d.receita_vendas, tipo: 'entrada' as const, inicio: 0, fim: d.receita_vendas },
+    {
+      rotulo: 'Custo dos materiais vendidos',
+      valor: -d.custo_materiais_vendidos,
+      tipo: 'saida' as const,
+      inicio: d.receita_vendas,
+      fim: d.lucro_bruto,
+    },
+    { rotulo: 'Lucro bruto', valor: d.lucro_bruto, tipo: 'subtotal' as const, inicio: 0, fim: d.lucro_bruto },
+    { rotulo: 'Juros de empréstimos', valor: juros, tipo: 'entrada' as const, inicio: d.lucro_bruto, fim: posJuros },
+    {
+      rotulo: 'Despesas operacionais',
+      valor: -d.despesas_operacionais,
+      tipo: 'saida' as const,
+      inicio: posJuros,
+      fim: d.resultado_operacional,
+    },
+    {
+      rotulo: 'Resultado operacional',
+      valor: d.resultado_operacional,
+      tipo: 'subtotal' as const,
+      inicio: 0,
+      fim: d.resultado_operacional,
+    },
+    {
+      rotulo: 'Impostos e outros',
+      valor: -d.impostos_outros,
+      tipo: 'saida' as const,
+      inicio: d.resultado_operacional,
+      fim: d.lucro_liquido,
+    },
+    { rotulo: 'Lucro líquido', valor: d.lucro_liquido, tipo: 'total' as const, inicio: 0, fim: d.lucro_liquido },
   ]
 })
+
+// entrada=verde, saída=vermelho, subtotal=índigo (checkpoint intermédio),
+// total=verde/vermelho conforme o sinal real (lucro ou prejuízo).
+function corBarraDre(l: { tipo: string; fim: number }) {
+  if (l.tipo === 'entrada') return PALETA.primaria500
+  if (l.tipo === 'saida') return PALETA.erro
+  if (l.tipo === 'subtotal') return PALETA.indigo500
+  return l.fim >= 0 ? PALETA.primaria600 : PALETA.erro
+}
+
+const dadosWaterfall = computed(() => ({
+  labels: linhasDre.value.map((l) => l.rotulo),
+  datasets: [
+    {
+      data: linhasDre.value.map((l): [number, number] => [l.inicio, l.fim]),
+      backgroundColor: linhasDre.value.map((l) => corBarraDre(l)),
+      borderRadius: 4,
+      borderSkipped: false,
+      barPercentage: 0.6,
+    },
+  ],
+}))
+
+const opcoesWaterfall = computed<any>(() => ({
+  indexAxis: 'y',
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    x: {
+      grid: { color: PALETA.borda },
+      border: { display: false },
+      ticks: { callback: (v: number) => mtCompacto(Number(v)) },
+    },
+    y: { grid: { display: false }, border: { display: false } },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        title: (items: any[]) => items[0].label,
+        label: (ctx: any) => {
+          const l = linhasDre.value[ctx.dataIndex]
+          if (!l) return ''
+          return (l.valor < 0 ? '− ' : '') + mt(Math.abs(l.valor))
+        },
+      },
+    },
+  },
+}))
+
+// --- Composição do lucro (Receita → Custo → Despesas → Resultado) ---------
+const dadosComposicao = computed(() => {
+  if (!dre.value) return { labels: [], datasets: [] }
+  const d = dre.value
+  return {
+    labels: ['Receita', 'Custo dos materiais', 'Despesas operacionais', temLucro.value ? 'Lucro líquido' : 'Prejuízo líquido'],
+    datasets: [
+      {
+        data: [d.receita_vendas, d.custo_materiais_vendidos, d.despesas_operacionais, Math.abs(d.lucro_liquido)],
+        backgroundColor: [PALETA.primaria500, PALETA.teal500, PALETA.erro, temLucro.value ? PALETA.primaria700 : '#8a3420'],
+        borderRadius: 4,
+        barPercentage: 0.6,
+      },
+    ],
+  }
+})
+
+const opcoesComposicao = computed<any>(() => ({
+  indexAxis: 'y',
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { right: 56 } },
+  scales: {
+    x: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+    y: { grid: { display: false }, border: { display: false } },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: { callbacks: { label: (ctx: any) => mt(ctx.raw) } },
+    datalabels: {
+      display: true,
+      anchor: 'end',
+      align: 'end',
+      clamp: true,
+      color: PALETA.texto,
+      font: { weight: 600, size: 11 },
+      formatter: (v: number) => mtCompacto(v),
+    },
+  },
+}))
 
 // Despesas operacionais detalhadas por categoria (a mesma informação que
 // alimenta o painel "Categorias em Destaque" das Despesas, aqui filtrada
@@ -76,6 +201,121 @@ const despesasPorCategoria = computed(() => {
     .map(([nome, valor]) => ({ nome, valor }))
     .sort((a, b) => b.valor - a.valor)
 })
+
+const dadosDespesasCategoria = computed(() => ({
+  labels: despesasPorCategoria.value.map((c) => c.nome),
+  datasets: [
+    {
+      data: despesasPorCategoria.value.map((c) => c.valor),
+      backgroundColor: PALETA.ambar500,
+      borderRadius: 4,
+      barPercentage: 0.6,
+    },
+  ],
+}))
+
+const opcoesDespesasCategoria = computed<any>(() => ({
+  indexAxis: 'y',
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { right: 56 } },
+  scales: {
+    x: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+    y: { grid: { display: false }, border: { display: false } },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: { callbacks: { label: (ctx: any) => mt(ctx.raw) } },
+    datalabels: {
+      display: true,
+      anchor: 'end',
+      align: 'end',
+      clamp: true,
+      color: PALETA.texto,
+      font: { weight: 600, size: 11 },
+      formatter: (v: number) => mtCompacto(v),
+    },
+  },
+}))
+
+// --- Evolução mensal ------------------------------------------------------
+// GET /relatorios/dre-mensal?meses=6 — endpoint NOVO, ainda por criar no
+// backend (ver prompt fornecido ao dono). Devolve, do mês mais antigo para
+// o mais recente, um DRE completo por mês (o mesmo formato de /relatorios/dre,
+// com "mes"/"mes_rotulo" a mais). Enquanto o endpoint não existir, esta
+// secção mostra silenciosamente "sem dados" em vez de rebentar a tela.
+interface DreMensal extends Dre {
+  mes: string
+  mes_rotulo: string
+}
+
+const evolucaoMensal = ref<DreMensal[]>([])
+const aCarregarEvolucao = ref(true)
+
+async function carregarEvolucaoMensal() {
+  aCarregarEvolucao.value = true
+  try {
+    const { data } = await api.get('/relatorios/dre-mensal', { params: { meses: 6 } })
+    evolucaoMensal.value = data.dados || []
+  } catch {
+    // Endpoint ainda não existe ou falhou — o painel fica vazio, sem partir a tela.
+    evolucaoMensal.value = []
+  } finally {
+    aCarregarEvolucao.value = false
+  }
+}
+
+onMounted(carregarEvolucaoMensal)
+
+const dadosEvolucao = computed(() => ({
+  labels: evolucaoMensal.value.map((m) => m.mes_rotulo),
+  datasets: [
+    {
+      label: 'Receita',
+      data: evolucaoMensal.value.map((m) => m.receita_vendas),
+      borderColor: PALETA.primaria500,
+      backgroundColor: PALETA.primaria500,
+      tension: 0.3,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      borderWidth: 2,
+    },
+    {
+      label: 'Despesas',
+      data: evolucaoMensal.value.map((m) => m.despesas_operacionais),
+      borderColor: PALETA.erro,
+      backgroundColor: PALETA.erro,
+      tension: 0.3,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      borderWidth: 2,
+    },
+    {
+      label: 'Lucro líquido',
+      data: evolucaoMensal.value.map((m) => m.lucro_liquido),
+      borderColor: PALETA.indigo600,
+      backgroundColor: PALETA.indigo600,
+      tension: 0.3,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      borderWidth: 2,
+    },
+  ],
+}))
+
+const opcoesEvolucao = computed<any>(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  scales: {
+    x: { grid: { display: false }, border: { display: false } },
+    y: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+  },
+  plugins: {
+    legend: { position: 'top', align: 'start' },
+    tooltip: { callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${mt(ctx.parsed.y)}` } },
+  },
+}))
 </script>
 
 <template>
@@ -161,19 +401,9 @@ const despesasPorCategoria = computed(() => {
           <h2>Demonstração de Resultados (DRE)</h2>
           <p class="subtitulo">Como se chega do total de vendas ao lucro real, passo a passo.</p>
 
-          <table class="dre-tabela">
-            <tbody>
-              <tr v-for="(l, i) in linhasDre" :key="i" :class="`linha--${l.tipo}`">
-                <td class="dre-rotulo" :class="{ 'dre-rotulo--indent': l.nivel === 1 }">
-                  {{ l.rotulo }}
-                  <span v-if="l.margem !== undefined" class="dre-margem">{{ l.margem }}% margem</span>
-                </td>
-                <td class="dre-valor" :class="l.valor < 0 ? 'negativo' : 'positivo'">
-                  {{ l.valor < 0 ? '−' : '' }}{{ mt(Math.abs(l.valor)) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="grafico-alto">
+            <Bar :data="dadosWaterfall" :options="opcoesWaterfall" />
+          </div>
 
           <div class="dre-nota">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -188,60 +418,21 @@ const despesasPorCategoria = computed(() => {
         <aside class="lateral-dir">
           <div class="painel-bloco">
             <h3>Composição do Lucro</h3>
-            <div class="composicao">
-              <div class="comp-linha">
-                <span>Receita</span>
-                <div class="comp-barra"><div class="comp-fill comp-fill--verde" style="width: 100%"></div></div>
-                <strong>{{ mt(dre.receita_vendas) }}</strong>
-              </div>
-              <div class="comp-linha">
-                <span>Custo materiais</span>
-                <div class="comp-barra">
-                  <div
-                    class="comp-fill comp-fill--teal"
-                    :style="{ width: dre.receita_vendas > 0 ? (dre.custo_materiais_vendidos / dre.receita_vendas) * 100 + '%' : '0%' }"
-                  ></div>
-                </div>
-                <strong>{{ mt(dre.custo_materiais_vendidos) }}</strong>
-              </div>
-              <div class="comp-linha">
-                <span>Despesas</span>
-                <div class="comp-barra">
-                  <div
-                    class="comp-fill comp-fill--vermelho"
-                    :style="{ width: dre.receita_vendas > 0 ? (dre.despesas_operacionais / dre.receita_vendas) * 100 + '%' : '0%' }"
-                  ></div>
-                </div>
-                <strong>{{ mt(dre.despesas_operacionais) }}</strong>
-              </div>
-              <div class="comp-linha comp-linha--total">
-                <span>{{ temLucro ? 'Sobra (lucro)' : 'Falta (prejuízo)' }}</span>
-                <div class="comp-barra">
-                  <div
-                    class="comp-fill"
-                    :class="temLucro ? 'comp-fill--escuro' : 'comp-fill--vermelho-escuro'"
-                    :style="{ width: dre.receita_vendas > 0 ? Math.min(100, Math.max(0, (Math.abs(dre.lucro_liquido) / dre.receita_vendas) * 100)) + '%' : '0%' }"
-                  ></div>
-                </div>
-                <strong>{{ mt(Math.abs(dre.lucro_liquido)) }}</strong>
-              </div>
+            <div class="grafico-medio">
+              <Bar :data="dadosComposicao" :options="opcoesComposicao" />
             </div>
           </div>
 
           <div v-if="despesasPorCategoria.length > 0" class="painel-bloco">
             <h3>Despesas Operacionais por Categoria</h3>
-            <div class="categorias-lista">
-              <div v-for="c in despesasPorCategoria" :key="c.nome" class="categorias-item">
-                <span class="categorias-item__nome">{{ c.nome }}</span>
-                <span class="categorias-item__valor">{{ mt(c.valor) }}</span>
-              </div>
+            <div class="grafico-medio" :style="{ height: Math.max(120, despesasPorCategoria.length * 34) + 'px' }">
+              <Bar :data="dadosDespesasCategoria" :options="opcoesDespesasCategoria" />
             </div>
           </div>
 
           <div class="painel-bloco">
             <h3>Mais Análises</h3>
             <div class="em-breve-lista">
-              <div class="em-breve-item">Evolução mensal (vários meses)</div>
               <div class="em-breve-item">Composição de materiais por categoria</div>
               <div class="em-breve-item">Comparação com período anterior</div>
               <div class="em-breve-item">Exportar PDF / Excel</div>
@@ -250,6 +441,23 @@ const despesasPorCategoria = computed(() => {
           </div>
         </aside>
       </div>
+
+      <!-- Evolução mensal — largura total, é a peça que mais beneficia de espaço -->
+      <section class="painel-bloco painel-bloco--evolucao">
+        <h2>Evolução Mensal</h2>
+        <p class="subtitulo">Receita, despesas e lucro líquido dos últimos 6 meses.</p>
+
+        <div v-if="aCarregarEvolucao" class="estado">
+          <span class="spinner" aria-hidden="true"></span>
+        </div>
+        <p v-else-if="evolucaoMensal.length === 0" class="vazio">
+          Ainda sem dados suficientes para uma evolução mensal — este painel liga-se automaticamente assim que o endpoint
+          <code>/relatorios/dre-mensal</code> existir no backend.
+        </p>
+        <div v-else class="grafico-alto">
+          <Line :data="dadosEvolucao" :options="opcoesEvolucao" />
+        </div>
+      </section>
     </template>
   </AppLayout>
 </template>
@@ -342,67 +550,14 @@ const despesasPorCategoria = computed(() => {
   color: var(--cor-texto);
 }
 
-/* ---- Tabela do DRE ---- */
-.dre-tabela {
-  width: 100%;
-  border-collapse: collapse;
+/* ---- Contentores dos gráficos (o Chart.js precisa de altura fixa no pai) ---- */
+.grafico-alto {
+  position: relative;
+  height: 340px;
 }
-.dre-tabela td {
-  padding: 12px 8px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--cor-neutra-fundo);
-}
-.dre-rotulo {
-  color: var(--cor-texto);
-}
-.dre-rotulo--indent {
-  padding-left: 24px;
-  color: var(--cor-texto-suave);
-  font-size: 13px;
-}
-.dre-margem {
-  display: inline-block;
-  margin-left: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--cor-primaria-600);
-  background: var(--cor-primaria-50);
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-.dre-valor {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.dre-valor.positivo {
-  color: var(--cor-primaria-600);
-}
-.dre-valor.negativo {
-  color: var(--cor-erro);
-}
-.linha--subtotal td {
-  font-weight: 600;
-  background: var(--cor-fundo);
-}
-.linha--subtotal .dre-rotulo {
-  color: var(--cor-texto);
-}
-.linha--total td {
-  font-weight: 700;
-  font-size: 16px;
-  border-top: 2px solid var(--cor-primaria-600);
-  border-bottom: none;
-  padding-top: 16px;
-}
-.linha--total .dre-rotulo {
-  color: var(--cor-primaria-700);
-}
-.linha--total .dre-valor {
-  color: var(--cor-primaria-700);
-}
-.linha--total .dre-valor.negativo {
-  color: var(--cor-erro);
+.grafico-medio {
+  position: relative;
+  height: 200px;
 }
 
 .dre-nota {
@@ -425,82 +580,6 @@ const despesasPorCategoria = computed(() => {
   color: var(--cor-texto);
 }
 
-/* ---- Composição do lucro ---- */
-.composicao {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.comp-linha {
-  display: grid;
-  grid-template-columns: 90px 1fr auto;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--cor-texto);
-}
-.comp-barra {
-  height: 8px;
-  background: var(--cor-neutra-fundo);
-  border-radius: 5px;
-  overflow: hidden;
-}
-.comp-fill {
-  height: 100%;
-  border-radius: 5px;
-}
-.comp-fill--verde {
-  background: var(--cor-primaria-500);
-}
-.comp-fill--teal {
-  background: var(--cor-teal-500);
-}
-.comp-fill--vermelho {
-  background: var(--cor-erro);
-}
-.comp-fill--escuro {
-  background: var(--cor-primaria-700);
-}
-.comp-fill--vermelho-escuro {
-  background: #8a3420;
-}
-.comp-linha strong {
-  font-size: 12px;
-  color: var(--cor-texto);
-  font-variant-numeric: tabular-nums;
-}
-.comp-linha--total {
-  border-top: 1px solid var(--cor-neutra-fundo);
-  padding-top: 12px;
-  margin-top: 4px;
-}
-
-/* ---- Despesas por categoria ---- */
-.categorias-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.categorias-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--cor-fundo);
-  border-radius: var(--raio-sm);
-  font-size: 13px;
-}
-.categorias-item__nome {
-  color: var(--cor-texto);
-  font-weight: 500;
-}
-.categorias-item__valor {
-  color: var(--cor-erro);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 /* ---- Mais análises (em breve) ---- */
 .em-breve-lista {
   display: flex;
@@ -520,6 +599,10 @@ const despesasPorCategoria = computed(() => {
   margin: 12px 0 0;
   text-align: center;
   font-style: italic;
+}
+
+.painel-bloco--evolucao {
+  margin-top: 18px;
 }
 
 @media (max-width: 1000px) {
