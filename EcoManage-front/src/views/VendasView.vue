@@ -77,9 +77,9 @@ const vendasFiltradas = computed(() => {
 
 const cartoes = computed(() => [
   { rotulo: 'Receita de Vendas (listadas)', valor: resumo.value.receita_total, cor: 'verde', icone: 'vendas' },
-  { rotulo: 'Lucro Estimado', valor: resumo.value.lucro_total, cor: 'verde', icone: 'relatorios' },
-  { rotulo: 'Valor em Stock', valor: dashboard.value?.valor_stock, cor: 'verde', icone: 'materiais' },
-  { rotulo: 'Total em Dívida', valor: dashboard.value?.total_em_divida, cor: 'escuro', icone: 'emprestimos' },
+  { rotulo: 'Lucro Estimado', valor: resumo.value.lucro_total, cor: 'ambar', icone: 'relatorios' },
+  { rotulo: 'Valor em Stock', valor: dashboard.value?.valor_stock, cor: 'teal', icone: 'materiais' },
+  { rotulo: 'Total em Dívida', valor: dashboard.value?.total_em_divida, cor: 'vermelho', icone: 'emprestimos' },
 ])
 
 // Materiais com stock baixo — proxy para "alertas de stock": os que têm
@@ -262,7 +262,7 @@ async function guardarVenda() {
 
     <!-- Cartões -->
     <section class="cartoes">
-      <div v-for="c in cartoes" :key="c.rotulo" class="card-kpi">
+      <div v-for="c in cartoes" :key="c.rotulo" class="card-kpi" :class="`card-kpi--${c.cor}`">
         <div class="card-kpi__topo">
           <span class="card-kpi__rotulo">{{ c.rotulo }}</span>
           <span class="card-kpi__icone" :class="`card-kpi__icone--${c.cor}`" v-html="ICONES[c.icone]"></span>
@@ -643,6 +643,7 @@ async function guardarVenda() {
   font-weight: 600;
 }
 .total-estimado strong {
+  font-family: var(--fonte-titulo);
   font-size: 16px;
 }
 

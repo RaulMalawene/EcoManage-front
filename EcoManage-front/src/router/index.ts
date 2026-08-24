@@ -33,8 +33,25 @@ const router = createRouter({
       component: () => import('@/views/VendasView.vue'),
       meta: { requerAuth: true },
     },
-    // (Próximas telas — pessoas, materiais, compras... — entram aqui
-    //  com meta.requerAuth.)
+    {
+      path: '/compras',
+      name: 'compras',
+      component: () => import('@/views/CompraView.vue'),
+      meta: { requerAuth: true },
+    },
+    {
+      path: '/materiais',
+      name: 'materiais',
+      component: () => import('@/views/MateriaisView.vue'),
+      meta: { requerAuth: true },
+    },
+    {
+      path: '/emprestimos',
+      name: 'emprestimos',
+      component: () => import('@/views/EmprestimosView.vue'),
+      meta: { requerAuth: true },
+    },
+    // (Próximas telas — pessoas... — entram aqui com meta.requerAuth.)
   ],
 })
 

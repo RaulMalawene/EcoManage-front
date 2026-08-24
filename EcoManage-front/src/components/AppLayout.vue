@@ -16,10 +16,10 @@ const aSair = ref(false)
 const itens = [
   { nome: 'Painel', rota: 'dashboard', pronto: true, icone: 'painel' },
   { nome: 'Livro-caixa', rota: 'caixa', pronto: true, icone: 'caixa' },
-  { nome: 'Compras', rota: 'compras', pronto: false, icone: 'compras' },
+  { nome: 'Compras', rota: 'compras', pronto: true, icone: 'compras' },
   { nome: 'Vendas', rota: 'vendas', pronto: true, icone: 'vendas' },
-  { nome: 'Empréstimos & Dívidas', rota: 'emprestimos', pronto: false, icone: 'emprestimos' },
-  { nome: 'Materiais & Stock', rota: 'materiais', pronto: false, icone: 'materiais' },
+  { nome: 'Empréstimos & Dívidas', rota: 'emprestimos', pronto: true, icone: 'emprestimos' },
+  { nome: 'Materiais & Stock', rota: 'materiais', pronto: true, icone: 'materiais' },
   { nome: 'Despesas', rota: 'despesas', pronto: false, icone: 'despesas' },
   { nome: 'Contactos', rota: 'pessoas', pronto: false, icone: 'contactos' },
   { nome: 'Relatórios', rota: 'relatorios', pronto: false, icone: 'relatorios' },
@@ -159,8 +159,10 @@ async function sair() {
   align-items: center;
   gap: 10px;
   padding: 22px 20px;
-  font-weight: 700;
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
   font-size: 17px;
+  letter-spacing: -0.01em;
   color: var(--cor-texto);
 }
 
@@ -309,6 +311,8 @@ async function sair() {
   line-height: 1.2;
 }
 .topo__info strong {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
   font-size: 14px;
   color: var(--cor-texto);
 }

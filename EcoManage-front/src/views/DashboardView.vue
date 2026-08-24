@@ -56,8 +56,8 @@ const cartoes = computed(() => {
   const d = dashboard.value
   return [
     { rotulo: 'Saldo disponível', valor: d.saldo_caixa, cor: 'verde', icone: 'caixa' },
-    { rotulo: 'Total emprestado', valor: d.total_em_divida, cor: 'escuro', icone: 'emprestimos' },
-    { rotulo: 'Valor em stock', valor: d.valor_stock, cor: 'verde', icone: 'materiais' },
+    { rotulo: 'Total emprestado', valor: d.total_em_divida, cor: 'ambar', icone: 'emprestimos' },
+    { rotulo: 'Valor em stock', valor: d.valor_stock, cor: 'teal', icone: 'materiais' },
     { rotulo: 'Lucro do mês', valor: d.mes_corrente?.lucro_liquido, cor: 'destaque', icone: 'relatorios' },
   ]
 })
@@ -189,7 +189,7 @@ async function guardarStock() {
       </section>
 
       <section class="cartoes">
-        <div v-for="c in cartoes" :key="c.rotulo" class="card-kpi">
+        <div v-for="c in cartoes" :key="c.rotulo" class="card-kpi" :class="`card-kpi--${c.cor}`">
           <div class="card-kpi__topo">
             <span class="card-kpi__rotulo">{{ c.rotulo }}</span>
             <span class="card-kpi__icone" :class="`card-kpi__icone--${c.cor}`" v-html="ICONES[c.icone]"></span>

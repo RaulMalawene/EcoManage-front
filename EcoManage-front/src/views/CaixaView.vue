@@ -145,14 +145,14 @@ const paginas = computed(() => {
         </div>
         <strong class="card-kpi__valor">{{ mt(saldoActual) }}</strong>
       </div>
-      <div class="card-kpi">
+      <div class="card-kpi card-kpi--verde">
         <div class="card-kpi__topo">
           <span class="card-kpi__rotulo">Total entradas (período)</span>
           <span class="card-kpi__icone card-kpi__icone--verde" v-html="ICONES.vendas"></span>
         </div>
         <strong class="card-kpi__valor card-kpi__valor--verde">{{ mt(fluxo.entradas, { abs: true }) }}</strong>
       </div>
-      <div class="card-kpi">
+      <div class="card-kpi card-kpi--vermelho">
         <div class="card-kpi__topo">
           <span class="card-kpi__rotulo">Total saídas (período)</span>
           <span class="card-kpi__icone card-kpi__icone--vermelho" v-html="ICONES.compras"></span>

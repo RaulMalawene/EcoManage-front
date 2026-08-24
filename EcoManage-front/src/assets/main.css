@@ -13,6 +13,27 @@
   --cor-primaria-600: #167d45;
   --cor-primaria-700: #146339;
 
+  /* acento — verde-azulado (stock / materiais), harmoniza com o verde primário */
+  --cor-teal-50: #e9fbf7;
+  --cor-teal-100: #c8f2ea;
+  --cor-teal-500: #0f9488;
+  --cor-teal-600: #0c766d;
+  --cor-teal-700: #0a5c54;
+
+  /* acento — âmbar (lucro / pendências), quente e complementar ao verde */
+  --cor-ambar-50: #fef6e6;
+  --cor-ambar-100: #fbe7bd;
+  --cor-ambar-500: #d99a1f;
+  --cor-ambar-600: #b17f16;
+  --cor-ambar-700: #8a6310;
+
+  /* acento — índigo (informativo / referência secundária) */
+  --cor-indigo-50: #eef1fd;
+  --cor-indigo-100: #dbe1fa;
+  --cor-indigo-500: #5468d4;
+  --cor-indigo-600: #4353b0;
+  --cor-indigo-700: #37458c;
+
   /* neutros */
   --cor-texto: #16211c;
   --cor-texto-suave: #5c6b64;
@@ -34,7 +55,10 @@
   --sombra: 0 8px 24px -8px rgb(22 33 28 / 0.16);
   --sombra-foco: 0 0 0 3px rgb(31 157 87 / 0.25);
 
-  --fonte: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  /* tipografia — Inter para leitura corrida, Poppins para títulos e números
+     de destaque (geometria mais arredondada, transmite uma marca própria) */
+  --fonte: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  --fonte-titulo: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -63,6 +87,13 @@ h2,
 h3,
 p {
   margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fonte-titulo);
+  letter-spacing: -0.01em;
 }
 
 button {
@@ -110,17 +141,86 @@ a {
   margin-bottom: 22px;
 }
 
-/* ---- Cartões de KPI ---- */
+/* ---- Cartões de KPI ----
+   Cada cartão recebe um acabamento próprio (fundo em gradiente suave +
+   friso superior + selo do ícone) consoante `card-kpi--<cor>`, para que a
+   grelha de indicadores fique legível ao primeiro relance em vez de ser
+   uma fila de cartões brancos iguais. As cores derivam sempre do verde de
+   marca — nunca competem com ele. */
 .card-kpi {
+  position: relative;
   background: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   padding: 20px;
   box-shadow: var(--sombra);
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+.card-kpi::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--cor-borda);
+}
+.card-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgb(22 33 28 / 0.22);
+}
+
+/* Verde — indicador principal da página (o número que manda). */
+.card-kpi--verde {
+  background: linear-gradient(160deg, var(--cor-primaria-50) 0%, var(--cor-superficie) 62%);
+  border-color: var(--cor-primaria-100);
+}
+.card-kpi--verde::before {
+  background: linear-gradient(90deg, var(--cor-primaria-400), var(--cor-primaria-600));
+}
+
+/* Verde-azulado — stock e materiais. */
+.card-kpi--teal {
+  background: linear-gradient(160deg, var(--cor-teal-50) 0%, var(--cor-superficie) 62%);
+  border-color: var(--cor-teal-100);
+}
+.card-kpi--teal::before {
+  background: linear-gradient(90deg, var(--cor-teal-500), var(--cor-teal-700));
+}
+
+/* Âmbar — lucro, pendências, quantidades em destaque. */
+.card-kpi--ambar {
+  background: linear-gradient(160deg, var(--cor-ambar-50) 0%, var(--cor-superficie) 62%);
+  border-color: var(--cor-ambar-100);
+}
+.card-kpi--ambar::before {
+  background: linear-gradient(90deg, var(--cor-ambar-500), var(--cor-ambar-700));
+}
+
+/* Índigo — dados informativos/secundários (ex.: saldo trazido de outro módulo). */
+.card-kpi--indigo {
+  background: linear-gradient(160deg, var(--cor-indigo-50) 0%, var(--cor-superficie) 62%);
+  border-color: var(--cor-indigo-100);
+}
+.card-kpi--indigo::before {
+  background: linear-gradient(90deg, var(--cor-indigo-500), var(--cor-indigo-700));
+}
+
+/* Vermelho — dívidas, saídas de caixa, valores negativos. */
+.card-kpi--vermelho {
+  background: linear-gradient(160deg, var(--cor-erro-fundo) 0%, var(--cor-superficie) 62%);
+  border-color: #f6d4cf;
+}
+.card-kpi--vermelho::before {
+  background: linear-gradient(90deg, #e8735f, var(--cor-erro));
+}
+
+/* Cartão "herói" — o número mais importante da página, em destaque total. */
 .card-kpi--destaque {
-  background: linear-gradient(120deg, var(--cor-primaria-700), var(--cor-primaria-500));
+  background: linear-gradient(135deg, var(--cor-primaria-700), var(--cor-teal-500));
   border-color: transparent;
+}
+.card-kpi--destaque::before {
+  display: none;
 }
 .card-kpi--destaque .card-kpi__rotulo {
   color: rgb(255 255 255 / 0.85);
@@ -128,6 +228,13 @@ a {
 .card-kpi--destaque .card-kpi__valor {
   color: #fff;
 }
+/* Dentro de um cartão em destaque (fundo em gradiente), o selo do ícone
+   fica sempre num tom claro translúcido, seja qual for a cor semântica. */
+.card-kpi--destaque .card-kpi__icone {
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
+}
+
 .card-kpi__topo {
   display: flex;
   align-items: flex-start;
@@ -152,8 +259,20 @@ a {
   flex-shrink: 0;
 }
 .card-kpi__icone--verde {
-  background: var(--cor-primaria-50);
-  color: var(--cor-primaria-600);
+  background: var(--cor-primaria-100);
+  color: var(--cor-primaria-700);
+}
+.card-kpi__icone--teal {
+  background: var(--cor-teal-100);
+  color: var(--cor-teal-700);
+}
+.card-kpi__icone--ambar {
+  background: var(--cor-ambar-100);
+  color: var(--cor-ambar-700);
+}
+.card-kpi__icone--indigo {
+  background: var(--cor-indigo-100);
+  color: var(--cor-indigo-700);
 }
 .card-kpi__icone--escuro {
   background: var(--cor-neutra-fundo);
@@ -164,12 +283,29 @@ a {
   color: var(--cor-primaria-700);
 }
 .card-kpi__valor {
+  font-family: var(--fonte-titulo);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.card-kpi__nota {
+  display: block;
+  font-size: 11px;
+  color: var(--cor-texto-suave);
+  margin-top: 5px;
+  font-weight: 400;
+}
 .card-kpi__valor--verde {
-  color: var(--cor-primaria-600);
+  color: var(--cor-primaria-700);
+}
+.card-kpi__valor--teal {
+  color: var(--cor-teal-700);
+}
+.card-kpi__valor--ambar {
+  color: var(--cor-ambar-700);
+}
+.card-kpi__valor--indigo {
+  color: var(--cor-indigo-700);
 }
 .card-kpi__valor--escuro {
   color: var(--cor-texto);
@@ -183,12 +319,6 @@ a {
 .card-kpi__icone--vermelho {
   background: var(--cor-erro-fundo);
   color: var(--cor-erro);
-}
-/* Dentro de um cartão em destaque (fundo em gradiente), o selo do ícone
-   fica sempre num tom claro translúcido, seja qual for a cor semântica. */
-.card-kpi--destaque .card-kpi__icone {
-  background: rgb(255 255 255 / 0.18);
-  color: #fff;
 }
 
 /* ---- Estados de carregamento / erro ---- */
@@ -340,9 +470,22 @@ a {
   color: var(--cor-aviso);
 }
 .etiqueta--liquidado,
-.etiqueta--concluido {
+.etiqueta--concluido,
+.etiqueta--pronto {
   background: var(--cor-primaria-50);
   color: var(--cor-primaria-700);
+}
+.etiqueta--medio {
+  background: var(--cor-ambar-50);
+  color: var(--cor-ambar-700);
+}
+.etiqueta--baixo {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+.etiqueta--neutro {
+  background: var(--cor-neutra-fundo);
+  color: var(--cor-neutra-texto);
 }
 
 .vazio {
