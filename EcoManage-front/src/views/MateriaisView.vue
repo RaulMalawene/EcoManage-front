@@ -4,7 +4,7 @@ import axios from 'axios'
 import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
-import { mt } from '@/utils/formato'
+import { mt, dataCurta } from '@/utils/formato'
 import type { MaterialStock } from '@/types/api'
 
 interface ResumoMateriais {
@@ -45,6 +45,9 @@ const pesoTotal = computed(() => materiais.value.reduce((s, m) => s + Number(m.s
 
 // Quantos materiais estão "em alerta" (atingiram o limite de venda).
 const prontosParaVender = computed(() => materiais.value.filter((m) => m.em_alerta).length)
+
+// Total de quebras acumuladas (soma de todos os materiais).
+const quebrasTotais = computed(() => materiais.value.reduce((s, m) => s + Number(m.total_quebras_kg || 0), 0))
 
 function kg(valor: number | null | undefined) {
   return new Intl.NumberFormat('pt-MZ', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(valor || 0)
@@ -179,6 +182,95 @@ async function guardar() {
     aGuardar.value = false
   }
 }
+
+// --- Modal "Registar Quebra" ---------------------------------------------
+// POST /materiais/{id}/quebra: kg perdidos (humidade, danos, manuseamento…)
+// que saem do stock sem terem sido vendidos. Reduz stock_kg e soma a
+// total_quebras_kg — não mexe no custo médio nem entra como receita.
+// GET /materiais/{id}/quebras devolve o histórico (cada linha é um
+// movimento de stock com origem "Quebra"), mostrado aqui como contexto.
+interface MovimentoQuebra {
+  id: number
+  data: string
+  quantidade_kg: number
+  valor: number
+  observacoes: string | null
+  utilizador: string | null
+}
+
+function formQuebraVazio() {
+  return { quantidade_kg: '', motivo: '', data: '' }
+}
+
+const modalQuebraAberto = ref(false)
+const materialQuebra = ref<MaterialStock | null>(null)
+const formQuebra = reactive(formQuebraVazio())
+const aGuardarQuebra = ref(false)
+const erroQuebra = ref('')
+const errosCampoQuebra = ref<Record<string, string[]>>({})
+const historicoQuebras = ref<MovimentoQuebra[]>([])
+const aCarregarHistorico = ref(false)
+
+async function carregarHistoricoQuebras() {
+  if (!materialQuebra.value) return
+  aCarregarHistorico.value = true
+  try {
+    const { data } = await api.get(`/materiais/${materialQuebra.value.id}/quebras`)
+    historicoQuebras.value = data.dados.itens || []
+  } catch {
+    // Histórico é só informativo — se falhar, o formulário continua utilizável.
+  } finally {
+    aCarregarHistorico.value = false
+  }
+}
+
+async function abrirModalQuebra(material: MaterialStock) {
+  materialQuebra.value = material
+  Object.assign(formQuebra, formQuebraVazio())
+  erroQuebra.value = ''
+  errosCampoQuebra.value = {}
+  modalQuebraAberto.value = true
+  await carregarHistoricoQuebras()
+}
+
+function fecharModalQuebra() {
+  modalQuebraAberto.value = false
+  materialQuebra.value = null
+}
+
+function erroCampoQuebra(campo: string) {
+  return errosCampoQuebra.value[campo]?.[0] || ''
+}
+
+// Fica no modal depois de guardar (em vez de fechar) — assim dá para
+// registar várias quebras seguidas e ver logo cada uma no histórico.
+async function guardarQuebra() {
+  if (!materialQuebra.value) return
+  aGuardarQuebra.value = true
+  erroQuebra.value = ''
+  errosCampoQuebra.value = {}
+
+  try {
+    await api.post(`/materiais/${materialQuebra.value.id}/quebra`, {
+      quantidade_kg: Number(formQuebra.quantidade_kg),
+      motivo: formQuebra.motivo || undefined,
+      data: formQuebra.data || undefined,
+    })
+
+    Object.assign(formQuebra, formQuebraVazio())
+    await Promise.all([carregarHistoricoQuebras(), carregar()])
+    // `carregar()` troca as referências em `materiais` — realinha o material
+    // do modal para o stock/quebras acumuladas ficarem actualizados no ecrã.
+    materialQuebra.value = materiais.value.find((m) => m.id === materialQuebra.value?.id) ?? materialQuebra.value
+  } catch (e) {
+    if (axios.isAxiosError(e) && e.response?.data?.erros) {
+      errosCampoQuebra.value = e.response.data.erros
+    }
+    erroQuebra.value = (axios.isAxiosError(e) && e.response?.data?.mensagem) || 'Não foi possível registar a quebra. Tenta novamente.'
+  } finally {
+    aGuardarQuebra.value = false
+  }
+}
 </script>
 
 <template>
@@ -251,6 +343,19 @@ async function guardar() {
         <strong class="card-kpi__valor card-kpi__valor--indigo">{{ resumo.total_materiais }}</strong>
         <small class="card-kpi__nota">registados</small>
       </div>
+
+      <div class="card-kpi card-kpi--vermelho">
+        <div class="card-kpi__topo">
+          <span class="card-kpi__rotulo">Quebras Registadas</span>
+          <span class="card-kpi__icone card-kpi__icone--vermelho">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" /><path d="M9 9l6 6M15 9l-6 6" stroke-linecap="round" />
+            </svg>
+          </span>
+        </div>
+        <strong class="card-kpi__valor card-kpi__valor--vermelho">{{ kg(quebrasTotais) }} kg</strong>
+        <small class="card-kpi__nota">perdidos no total</small>
+      </div>
     </section>
 
     <div class="grelha">
@@ -301,7 +406,10 @@ async function guardar() {
                 <span class="etiqueta" :class="`etiqueta--${estado(m).classe}`">{{ estado(m).texto }}</span>
               </td>
               <td class="ao-centro">
-                <button type="button" class="btn-linha" @click="abrirModalStock(m)">+ Stock</button>
+                <div class="acoes-linha">
+                  <button type="button" class="btn-linha" @click="abrirModalStock(m)">+ Stock</button>
+                  <button type="button" class="btn-linha btn-linha--vermelho" @click="abrirModalQuebra(m)">Quebra</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -419,6 +527,87 @@ async function guardar() {
         </div>
       </div>
     </Teleport>
+
+    <!-- Modal: registar quebra -->
+    <Teleport to="body">
+      <div v-if="modalQuebraAberto" class="modal-veu" @click.self="fecharModalQuebra">
+        <div class="modal-cartao modal-cartao--largo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-quebra">
+          <div class="modal-cabecalho">
+            <h3 id="titulo-modal-quebra">Registar Quebra — {{ materialQuebra?.nome }}</h3>
+            <button type="button" class="modal-fechar" aria-label="Fechar" @click="fecharModalQuebra">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <form class="modal-form" @submit.prevent="guardarQuebra">
+            <div class="quebra-resumo">
+              <div>
+                <span class="quebra-resumo__rotulo">Stock disponível</span>
+                <strong>{{ kg(materialQuebra?.stock_kg) }} kg</strong>
+              </div>
+              <div>
+                <span class="quebra-resumo__rotulo">Quebras já registadas</span>
+                <strong>{{ kg(materialQuebra?.total_quebras_kg) }} kg</strong>
+              </div>
+            </div>
+
+            <div class="campo-modal-grupo">
+              <div class="campo-modal">
+                <label for="quebra-quantidade">Quantidade perdida (kg)</label>
+                <input
+                  id="quebra-quantidade"
+                  v-model="formQuebra.quantidade_kg"
+                  type="number"
+                  min="0"
+                  :max="materialQuebra?.stock_kg"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+                <span v-if="erroCampoQuebra('quantidade_kg')" class="campo-modal__erro">{{ erroCampoQuebra('quantidade_kg') }}</span>
+              </div>
+              <div class="campo-modal">
+                <label for="quebra-data">Data <small>(opcional)</small></label>
+                <input id="quebra-data" v-model="formQuebra.data" type="date" />
+              </div>
+            </div>
+
+            <div class="campo-modal">
+              <label for="quebra-motivo">Motivo <small>(opcional)</small></label>
+              <input id="quebra-motivo" v-model="formQuebra.motivo" type="text" placeholder="ex.: Humidade, dano no transporte…" />
+            </div>
+
+            <p v-if="erroQuebra" class="modal-alerta" role="alert">{{ erroQuebra }}</p>
+
+            <div class="modal-rodape">
+              <button type="button" class="botao-secundario" @click="fecharModalQuebra">Fechar</button>
+              <button type="submit" class="botao-primario" :disabled="aGuardarQuebra">
+                <span v-if="aGuardarQuebra" class="spinner spinner--claro" aria-hidden="true"></span>
+                {{ aGuardarQuebra ? 'A registar…' : 'Registar Quebra' }}
+              </button>
+            </div>
+          </form>
+
+          <div class="quebra-historico">
+            <h4>Histórico recente</h4>
+            <div v-if="aCarregarHistorico" class="estado">
+              <span class="spinner" aria-hidden="true"></span>
+            </div>
+            <p v-else-if="historicoQuebras.length === 0" class="vazio-mini">Sem quebras registadas para este material.</p>
+            <div v-else class="quebra-lista">
+              <div v-for="mv in historicoQuebras" :key="mv.id" class="quebra-item">
+                <div>
+                  <strong>{{ kg(mv.quantidade_kg) }} kg</strong>
+                  <small>{{ dataCurta(mv.data) }}{{ mv.observacoes ? ' · ' + mv.observacoes : '' }}</small>
+                </div>
+                <span class="quebra-item__valor">−{{ mt(mv.valor) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </AppLayout>
 </template>
 
@@ -498,6 +687,20 @@ async function guardar() {
 .btn-linha:hover {
   background: var(--cor-primaria-100);
 }
+.btn-linha--vermelho {
+  color: var(--cor-erro);
+  background: var(--cor-erro-fundo);
+  border-color: #f6d4cf;
+}
+.btn-linha--vermelho:hover {
+  background: #f9c9c2;
+}
+
+.acoes-linha {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
 
 .lateral-dir {
   display: flex;
@@ -573,6 +776,72 @@ async function guardar() {
   border-radius: var(--raio-sm);
   background: var(--cor-fundo);
   color: var(--cor-texto);
+}
+
+/* --- Modal: registar quebra --- */
+.quebra-resumo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--cor-erro-fundo);
+  border-radius: var(--raio-sm);
+}
+.quebra-resumo__rotulo {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--cor-texto-suave);
+  margin-bottom: 3px;
+}
+.quebra-resumo strong {
+  font-size: 16px;
+  color: var(--cor-erro);
+}
+
+.quebra-historico {
+  padding: 0 24px 22px;
+}
+.quebra-historico h4 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--cor-texto-suave);
+  margin: 0 0 12px;
+}
+.quebra-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.quebra-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--cor-fundo);
+  border-radius: var(--raio-sm);
+}
+.quebra-item strong {
+  display: block;
+  font-size: 13px;
+  color: var(--cor-texto);
+}
+.quebra-item small {
+  font-size: 12px;
+  color: var(--cor-texto-suave);
+}
+.quebra-item__valor {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cor-erro);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 @media (max-width: 1000px) {

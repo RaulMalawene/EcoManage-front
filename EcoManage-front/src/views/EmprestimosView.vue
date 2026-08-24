@@ -4,7 +4,7 @@ import axios from 'axios'
 import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { mt, dataCurta } from '@/utils/formato'
-import type { Paginacao } from '@/types/api'
+import type { Paginacao, MaterialStock } from '@/types/api'
 
 interface Emprestimo {
   id: number
@@ -14,6 +14,11 @@ interface Emprestimo {
   saldo_devedor: number
   data_vencimento: string | null
   estado: 'em_dia' | 'vencido' | 'liquidado' | string
+  tipo: 'dinheiro' | 'adiantamento_material' | 'material_emprestado' | string
+  tipo_rotulo?: string
+  // Só preenchidos quando tipo = material_emprestado.
+  material?: string | null
+  quantidade_kg?: number | null
 }
 
 interface ResumoEmprestimos {
@@ -108,7 +113,11 @@ function irPara(p: number) {
 // --- Modal "Novo Registo" -------------------------------------------------
 // POST /emprestimos (confirmado no código de EmprestimoRequest/EmprestimoService):
 // { pessoa_id, valor_principal (obrigatório), juro_valor?, data?, data_vencimento?,
-// motivo?, tipo? ('dinheiro' | 'adiantamento_material', por omissão 'dinheiro') }.
+// motivo?, tipo? ('dinheiro' | 'adiantamento_material' | 'material_emprestado',
+// por omissão 'dinheiro'), material_id?/quantidade_kg? (obrigatórios só quando
+// tipo = 'material_emprestado' — nesse caso o empréstimo sai directamente do
+// stock do material escolhido, em vez de dinheiro do caixa; valor_principal
+// continua obrigatório mesmo assim, é o valor em MT que fica registado como dívida).
 // valor_total (mostrado na tabela/cartões) é calculado no backend = principal + juro.
 // O devedor pode ser escolhido de entre os já cadastrados (GET /pessoas?tipo=devedor)
 // ou criado ali mesmo (POST /pessoas).
@@ -118,7 +127,9 @@ interface FormEmprestimo {
   nomeDevedorNovo: string
   valor_principal: string
   juro_valor: string
-  tipo: 'dinheiro' | 'adiantamento_material'
+  tipo: 'dinheiro' | 'adiantamento_material' | 'material_emprestado'
+  material_id: number | null
+  quantidade_kg: string
   data_vencimento: string
   motivo: string
 }
@@ -131,6 +142,8 @@ function formEmprestimoVazio(): FormEmprestimo {
     valor_principal: '',
     juro_valor: '',
     tipo: 'dinheiro',
+    material_id: materiais.value[0]?.id ?? null,
+    quantidade_kg: '',
     data_vencimento: '',
     motivo: '',
   }
@@ -139,10 +152,14 @@ function formEmprestimoVazio(): FormEmprestimo {
 const modalRegistoAberto = ref(false)
 const devedores = ref<Pessoa[]>([])
 const aCarregarDevedores = ref(false)
+const materiais = ref<MaterialStock[]>([])
+const aCarregarMateriais = ref(false)
 const formEmprestimo = reactive<FormEmprestimo>(formEmprestimoVazio())
 const aGuardarRegisto = ref(false)
 const erroRegisto = ref('')
 const errosCampoRegisto = ref<Record<string, string[]>>({})
+
+const materialEmprestimoSeleccionado = computed(() => materiais.value.find((m) => m.id === formEmprestimo.material_id))
 
 async function abrirModalRegisto() {
   erroRegisto.value = ''
@@ -159,6 +176,19 @@ async function abrirModalRegisto() {
     } finally {
       aCarregarDevedores.value = false
     }
+  }
+
+  // Ao contrário dos devedores, o stock muda com frequência (vendas, compras,
+  // quebras…) — recarrega sempre que o modal abre para os kg mostrados não
+  // ficarem desactualizados.
+  aCarregarMateriais.value = true
+  try {
+    const resposta = await api.get('/materiais')
+    materiais.value = resposta.data.dados.itens || []
+  } catch {
+    // Sem materiais disponíveis, "Empréstimo em material" fica sem opções.
+  } finally {
+    aCarregarMateriais.value = false
   }
 
   Object.assign(formEmprestimo, formEmprestimoVazio())
@@ -185,11 +215,15 @@ async function guardarRegisto() {
       pessoaId = resPessoa.data.dados.id
     }
 
+    const emMaterial = formEmprestimo.tipo === 'material_emprestado'
+
     await api.post('/emprestimos', {
       pessoa_id: pessoaId,
       valor_principal: Number(formEmprestimo.valor_principal),
       juro_valor: formEmprestimo.juro_valor ? Number(formEmprestimo.juro_valor) : undefined,
       tipo: formEmprestimo.tipo,
+      material_id: emMaterial ? formEmprestimo.material_id : undefined,
+      quantidade_kg: emMaterial ? Number(formEmprestimo.quantidade_kg) : undefined,
       data_vencimento: formEmprestimo.data_vencimento || undefined,
       motivo: formEmprestimo.motivo || undefined,
     })
@@ -374,11 +408,25 @@ async function guardarPagamento() {
             </td>
             <td>
               <span class="tipo">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  v-if="e.tipo === 'material_emprestado'"
+                  viewBox="0 0 24 24"
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 2 3 7l9 5 9-5-9-5Z" /><path d="M3 12l9 5 9-5M3 17l9 5 9-5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M7 17 17 7M7 7h10v10" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                Empréstimo
+                {{ e.tipo_rotulo || 'Empréstimo' }}
               </span>
+              <div v-if="e.tipo === 'material_emprestado' && e.material" class="tipo-material">
+                {{ e.material }} · {{ Number(e.quantidade_kg).toFixed(1) }}kg
+              </div>
             </td>
             <td class="ao-fim cinza nowrap">{{ mt(e.valor_total) }}</td>
             <td class="ao-fim forte nowrap">{{ mt(e.saldo_devedor) }}</td>
@@ -478,12 +526,40 @@ async function guardarPagamento() {
                 <select id="tipo-emprestimo" v-model="formEmprestimo.tipo">
                   <option value="dinheiro">Empréstimo em dinheiro</option>
                   <option value="adiantamento_material">Adiantamento a abater em material</option>
+                  <option value="material_emprestado">Empréstimo em material</option>
                 </select>
               </div>
               <div class="campo-modal">
                 <label for="data-vencimento">Data de vencimento <small>(opcional)</small></label>
                 <input id="data-vencimento" v-model="formEmprestimo.data_vencimento" type="date" />
                 <span v-if="erroCampoRegisto('data_vencimento')" class="campo-modal__erro">{{ erroCampoRegisto('data_vencimento') }}</span>
+              </div>
+            </div>
+
+            <!-- Só quando "Empréstimo em material": sai directamente do stock, não do caixa. -->
+            <div v-if="formEmprestimo.tipo === 'material_emprestado'" class="campo-modal-grupo campo-modal-grupo--material">
+              <div class="campo-modal">
+                <label for="material-emprestimo">Material emprestado</label>
+                <select id="material-emprestimo" v-model.number="formEmprestimo.material_id" :disabled="aCarregarMateriais">
+                  <option v-if="aCarregarMateriais" value="">A carregar materiais…</option>
+                  <option v-for="m in materiais" :key="m.id" :value="m.id">
+                    {{ m.nome }} — {{ Number(m.stock_kg).toFixed(0) }}kg em stock
+                  </option>
+                </select>
+                <span v-if="erroCampoRegisto('material_id')" class="campo-modal__erro">{{ erroCampoRegisto('material_id') }}</span>
+              </div>
+              <div class="campo-modal">
+                <label for="quantidade-material">Quantidade (kg)</label>
+                <input
+                  id="quantidade-material"
+                  v-model="formEmprestimo.quantidade_kg"
+                  type="number"
+                  min="0"
+                  :max="materialEmprestimoSeleccionado?.stock_kg"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+                <span v-if="erroCampoRegisto('quantidade_kg')" class="campo-modal__erro">{{ erroCampoRegisto('quantidade_kg') }}</span>
               </div>
             </div>
 
@@ -628,6 +704,18 @@ async function guardarPagamento() {
   font-size: 13px;
   color: var(--cor-primaria-600);
   white-space: nowrap;
+}
+.tipo-material {
+  font-size: 11px;
+  color: var(--cor-texto-suave);
+  margin-top: 2px;
+  padding-left: 19px;
+}
+
+.campo-modal-grupo--material {
+  padding: 12px;
+  background: var(--cor-teal-50);
+  border-radius: var(--raio-sm);
 }
 
 .btn-linha {

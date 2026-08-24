@@ -13,6 +13,7 @@ export interface MaterialStock {
   preco_compra_kg: number
   preco_venda_kg: number
   stock_kg: number
+  total_quebras_kg: number
   custo_medio_kg: number
   limite_alerta_kg: number | null
   valor_stock: number
