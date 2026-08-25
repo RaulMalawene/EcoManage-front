@@ -8,6 +8,7 @@ import api from '@/services/api'
 import { mt, dataIsoLocal } from '@/utils/formato'
 import { mtCompacto } from '@/utils/graficos'
 import { PALETA } from '@/utils/paleta'
+import { baixarFicheiro } from '@/utils/exportar'
 import '@/utils/graficos' // regista os componentes do Chart.js usados nesta app
 
 interface Dre {
@@ -51,6 +52,22 @@ async function carregar() {
 }
 
 onMounted(carregar)
+
+// --- Exportar PDF ---------------------------------------------------------
+// GET /relatorios/dre/exportar — endpoint NOVO, ainda por criar no backend
+// (ver prompt fornecido ao dono). Reaproveita o mesmo período seleccionado.
+const aExportar = ref(false)
+
+async function exportar() {
+  aExportar.value = true
+  try {
+    await baixarFicheiro('/relatorios/dre/exportar', { data_inicio: dataInicio.value, data_fim: dataFim.value })
+  } catch {
+    erro.value = 'Não foi possível exportar. Confirma que o endpoint /relatorios/dre/exportar já existe no backend.'
+  } finally {
+    aExportar.value = false
+  }
+}
 
 // O lucro é positivo? Muda a cor e a mensagem do resumo em toda a tela.
 const temLucro = computed(() => (dre.value?.lucro_liquido || 0) >= 0)
@@ -335,9 +352,9 @@ const opcoesEvolucao = computed<ChartOptions<'line'>>(() => ({
           <span>até</span>
           <input v-model="dataFim" type="date" class="filtro-pesquisa" @change="carregar" />
         </div>
-        <button type="button" class="botao-fantasma" disabled title="Em breve">
-          Exportar PDF
-          <small>em breve</small>
+        <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">
+          <span v-if="aExportar" class="spinner" aria-hidden="true"></span>
+          {{ aExportar ? 'A exportar…' : 'Exportar PDF' }}
         </button>
       </div>
     </div>
@@ -436,7 +453,7 @@ const opcoesEvolucao = computed<ChartOptions<'line'>>(() => ({
             <div class="em-breve-lista">
               <div class="em-breve-item">Composição de materiais por categoria</div>
               <div class="em-breve-item">Comparação com período anterior</div>
-              <div class="em-breve-item">Exportar PDF / Excel</div>
+              <div class="em-breve-item">Exportar para Excel</div>
             </div>
             <p class="em-breve-legenda">Em breve. Cada uma depende de um endpoint novo no backend.</p>
           </div>

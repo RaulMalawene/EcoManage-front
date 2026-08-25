@@ -5,6 +5,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
 import { mt, dataCurta } from '@/utils/formato'
+import { baixarFicheiro } from '@/utils/exportar'
 import type { MaterialStock } from '@/types/api'
 
 interface ResumoMateriais {
@@ -55,6 +56,22 @@ function kg(valor: number | null | undefined) {
 
 function refMaterial(id: number) {
   return 'MAT-' + String(id).padStart(3, '0')
+}
+
+// --- Exportar PDF ---------------------------------------------------------
+// GET /materiais/exportar — endpoint NOVO, ainda por criar no backend (ver
+// prompt fornecido ao dono).
+const aExportar = ref(false)
+
+async function exportar() {
+  aExportar.value = true
+  try {
+    await baixarFicheiro('/materiais/exportar')
+  } catch {
+    erro.value = 'Não foi possível exportar. Confirma que o endpoint /materiais/exportar já existe no backend.'
+  } finally {
+    aExportar.value = false
+  }
 }
 
 // Estado do material face ao limite. O limite_alerta_kg marca o ponto a
@@ -284,9 +301,9 @@ async function guardarQuebra() {
         <p>Gestão centralizada de inventário e níveis de stock para reciclagem.</p>
       </div>
       <div class="cabecalho__accoes">
-        <button type="button" class="botao-fantasma" disabled title="Em breve">
-          Exportar
-          <small>em breve</small>
+        <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">
+          <span v-if="aExportar" class="spinner" aria-hidden="true"></span>
+          {{ aExportar ? 'A exportar…' : 'Exportar' }}
         </button>
         <button type="button" class="botao-primario" @click="abrirModalNovo">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">

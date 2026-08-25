@@ -5,6 +5,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
 import { mt } from '@/utils/formato'
+import { baixarFicheiro } from '@/utils/exportar'
 import type { Paginacao } from '@/types/api'
 
 interface Pessoa {
@@ -81,6 +82,22 @@ function irPara(p: number) {
   if (p >= 1 && p <= paginacao.value.ultima_pagina) {
     paginaActual.value = p
     carregar()
+  }
+}
+
+// --- Exportar CSV -----------------------------------------------------
+// GET /pessoas/exportar — endpoint NOVO, ainda por criar no backend (ver
+// prompt fornecido ao dono). Reaproveita os mesmos filtros da listagem.
+const aExportar = ref(false)
+
+async function exportar() {
+  aExportar.value = true
+  try {
+    await baixarFicheiro('/pessoas/exportar', { tipo: filtroTipo.value || undefined, pesquisa: pesquisa.value.trim() || undefined })
+  } catch {
+    erro.value = 'Não foi possível exportar. Confirma que o endpoint /pessoas/exportar já existe no backend.'
+  } finally {
+    aExportar.value = false
   }
 }
 
@@ -288,9 +305,9 @@ async function desactivarSeleccionado() {
         <p>Gira os seus clientes, fornecedores e parceiros de negócio.</p>
       </div>
       <div class="cabecalho__accoes">
-        <button type="button" class="botao-fantasma" disabled title="Em breve">
-          Exportar CSV
-          <small>em breve</small>
+        <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">
+          <span v-if="aExportar" class="spinner" aria-hidden="true"></span>
+          {{ aExportar ? 'A exportar…' : 'Exportar CSV' }}
         </button>
         <button type="button" class="botao-primario" @click="abrirModalNovo">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">

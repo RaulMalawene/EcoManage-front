@@ -5,6 +5,7 @@ import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { ICONES } from '@/utils/icones'
 import { mt, dataCurta, dataIsoLocal } from '@/utils/formato'
+import { baixarFicheiro } from '@/utils/exportar'
 import type { Paginacao } from '@/types/api'
 
 interface Movimento {
@@ -100,6 +101,23 @@ const paginas = computed(() => {
   const total = paginacao.value.ultima_pagina
   return Array.from({ length: total }, (_, i) => i + 1).slice(0, 5)
 })
+
+// --- Exportar PDF ---------------------------------------------------------
+// GET /caixa/exportar — endpoint NOVO, ainda por criar no backend (ver
+// prompt fornecido ao dono). Reaproveita os mesmos filtros da listagem.
+const aExportar = ref(false)
+
+async function exportar() {
+  aExportar.value = true
+  try {
+    const { data_inicio, data_fim } = intervaloDatas()
+    await baixarFicheiro('/caixa/exportar', { data_inicio, data_fim, tipo: tipoFiltro.value || undefined })
+  } catch {
+    erro.value = 'Não foi possível exportar. Confirma que o endpoint /caixa/exportar já existe no backend.'
+  } finally {
+    aExportar.value = false
+  }
+}
 </script>
 
 <template>
@@ -112,16 +130,16 @@ const paginas = computed(() => {
         <p>Consulta todas as entradas e saídas financeiras da Jay Recicly.</p>
       </div>
       <div class="cabecalho__accoes">
-        <button type="button" class="botao-fantasma" disabled title="Em breve">
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2">
+        <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">
+          <span v-if="aExportar" class="spinner" aria-hidden="true"></span>
+          <svg v-else viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2">
             <path
               d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
               stroke-linecap="round"
               stroke-linejoin="round"
             />
           </svg>
-          Exportar PDF
-          <small>em breve</small>
+          {{ aExportar ? 'A exportar…' : 'Exportar PDF' }}
         </button>
       </div>
     </div>

@@ -406,8 +406,12 @@ a {
   background: var(--cor-superficie);
   border: 1.5px solid var(--cor-borda);
   border-radius: var(--raio-sm);
-  cursor: not-allowed;
+  cursor: pointer;
   font-family: inherit;
+}
+.botao-fantasma:hover:not(:disabled) {
+  border-color: var(--cor-primaria-400);
+  color: var(--cor-primaria-700);
 }
 .botao-fantasma small {
   font-size: 10px;
@@ -416,7 +420,8 @@ a {
   border-radius: 5px;
 }
 .botao-primario:disabled,
-.botao-secundario:disabled {
+.botao-secundario:disabled,
+.botao-fantasma:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

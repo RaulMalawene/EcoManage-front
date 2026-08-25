@@ -4,6 +4,7 @@ import axios from 'axios'
 import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { mt, dataCurta } from '@/utils/formato'
+import { baixarFicheiro } from '@/utils/exportar'
 import type { Paginacao, MaterialStock } from '@/types/api'
 
 interface Emprestimo {
@@ -107,6 +108,22 @@ function irPara(p: number) {
   if (p >= 1 && p <= paginacao.value.ultima_pagina) {
     paginaActual.value = p
     carregar()
+  }
+}
+
+// --- Exportar PDF ---------------------------------------------------------
+// GET /emprestimos/exportar — endpoint NOVO, ainda por criar no backend
+// (ver prompt fornecido ao dono). Reaproveita o mesmo filtro de estado.
+const aExportar = ref(false)
+
+async function exportar() {
+  aExportar.value = true
+  try {
+    await baixarFicheiro('/emprestimos/exportar', { estado: filtroEstado.value || undefined })
+  } catch {
+    erro.value = 'Não foi possível exportar. Confirma que o endpoint /emprestimos/exportar já existe no backend.'
+  } finally {
+    aExportar.value = false
   }
 }
 
@@ -306,9 +323,9 @@ async function guardarPagamento() {
         <p>Gira os empréstimos concedidos a terceiros e os pagamentos a receber.</p>
       </div>
       <div class="cabecalho__accoes">
-        <button type="button" class="botao-fantasma" disabled title="Em breve">
-          Exportar PDF
-          <small>em breve</small>
+        <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">
+          <span v-if="aExportar" class="spinner" aria-hidden="true"></span>
+          {{ aExportar ? 'A exportar…' : 'Exportar PDF' }}
         </button>
         <button type="button" class="botao-primario" @click="abrirModalRegisto">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
