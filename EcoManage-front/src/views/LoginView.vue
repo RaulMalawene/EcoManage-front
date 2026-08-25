@@ -47,193 +47,211 @@ async function submeter() {
 
 <template>
   <div class="tela-login">
-    <!-- Painel de marca (visível em ecrãs largos) -->
-    <section class="painel-marca" aria-hidden="true">
-      <div class="painel-marca__conteudo">
-        <div class="painel-marca__logo-card">
-          <img :src="logoEcofenix" alt="EcoFênix — Reciclagem &amp; Coleta" class="painel-marca__imagem" />
+    <!-- Fundo decorativo: manchas de gradiente suaves, nunca atrás do logo
+         (é por isso que o logo fica sempre sobre o cartão branco). -->
+    <div class="fundo-decorativo" aria-hidden="true">
+      <span class="mancha mancha--verde"></span>
+      <span class="mancha mancha--laranja"></span>
+      <span class="mancha mancha--teal"></span>
+    </div>
+
+    <div class="cartao-login">
+      <img :src="logoEcofenix" alt="EcoFênix — Reciclagem &amp; Coleta" class="cartao-login__logo" />
+      <p class="cartao-login__tagline">Gestão simples para operações mais sustentáveis.</p>
+
+      <div class="cartao-login__divisor"></div>
+
+      <h2>Iniciar sessão</h2>
+      <p class="subtitulo">Introduz as tuas credenciais para aceder ao sistema.</p>
+
+      <p v-if="auth.erro" class="alerta" role="alert">
+        {{ auth.erro }}
+      </p>
+
+      <form novalidate @submit.prevent="submeter">
+        <div class="campo">
+          <label for="username">Utilizador</label>
+          <input
+            id="username"
+            v-model="form.username"
+            type="text"
+            autocomplete="username"
+            placeholder="o teu nome de utilizador"
+            :aria-invalid="!!erroUsername"
+            :aria-describedby="erroUsername ? 'username-erro' : undefined"
+            :disabled="auth.aCarregar"
+            autofocus
+          />
+          <span v-if="erroUsername" id="username-erro" class="campo__erro">{{ erroUsername }}</span>
         </div>
-        <h1>Gestão simples para operações mais sustentáveis.</h1>
-        <p>Pessoas, materiais e compras: tudo num só lugar, pronto para a tua equipa.</p>
-      </div>
-    </section>
 
-    <!-- Painel do formulário -->
-    <section class="painel-formulario">
-      <div class="cartao-formulario">
-        <div class="cabecalho-mobile">
-          <img :src="logoEcofenix" alt="EcoFênix — Reciclagem &amp; Coleta" class="cabecalho-mobile__imagem" />
-        </div>
-
-        <h2>Iniciar sessão</h2>
-        <p class="subtitulo">Introduz as tuas credenciais para aceder ao sistema.</p>
-
-        <p v-if="auth.erro" class="alerta" role="alert">
-          {{ auth.erro }}
-        </p>
-
-        <form novalidate @submit.prevent="submeter">
-          <div class="campo">
-            <label for="username">Utilizador</label>
+        <div class="campo">
+          <label for="palavra-passe">Palavra-passe</label>
+          <div class="campo-palavra-passe">
             <input
-              id="username"
-              v-model="form.username"
-              type="text"
-              autocomplete="username"
-              placeholder="o teu nome de utilizador"
-              :aria-invalid="!!erroUsername"
-              :aria-describedby="erroUsername ? 'username-erro' : undefined"
+              id="palavra-passe"
+              v-model="form.palavraPasse"
+              :type="mostrarPalavraPasse ? 'text' : 'password'"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              :aria-invalid="!!erroPalavraPasse"
+              :aria-describedby="erroPalavraPasse ? 'palavra-passe-erro' : undefined"
               :disabled="auth.aCarregar"
-              autofocus
             />
-            <span v-if="erroUsername" id="username-erro" class="campo__erro">{{ erroUsername }}</span>
+            <button
+              type="button"
+              class="alternar-visibilidade"
+              :aria-label="mostrarPalavraPasse ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'"
+              @click="mostrarPalavraPasse = !mostrarPalavraPasse"
+            >
+              <svg v-if="mostrarPalavraPasse" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M3 3l18 18M10.6 10.6a2.5 2.5 0 0 0 3.5 3.5M9.4 5.5A10.9 10.9 0 0 1 12 5c5 0 9 3.6 10.5 7-.6 1.3-1.4 2.5-2.5 3.6M6.2 6.8C4 8.3 2.4 10.4 1.5 12c1.5 3.4 5.5 7 10.5 7 1.4 0 2.7-.3 3.9-.8" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
           </div>
+          <span v-if="erroPalavraPasse" id="palavra-passe-erro" class="campo__erro">{{ erroPalavraPasse }}</span>
+        </div>
 
-          <div class="campo">
-            <label for="palavra-passe">Palavra-passe</label>
-            <div class="campo-palavra-passe">
-              <input
-                id="palavra-passe"
-                v-model="form.palavraPasse"
-                :type="mostrarPalavraPasse ? 'text' : 'password'"
-                autocomplete="current-password"
-                placeholder="••••••••"
-                :aria-invalid="!!erroPalavraPasse"
-                :aria-describedby="erroPalavraPasse ? 'palavra-passe-erro' : undefined"
-                :disabled="auth.aCarregar"
-              />
-              <button
-                type="button"
-                class="alternar-visibilidade"
-                :aria-label="mostrarPalavraPasse ? 'Ocultar palavra-passe' : 'Mostrar palavra-passe'"
-                @click="mostrarPalavraPasse = !mostrarPalavraPasse"
-              >
-                <svg v-if="mostrarPalavraPasse" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M3 3l18 18M10.6 10.6a2.5 2.5 0 0 0 3.5 3.5M9.4 5.5A10.9 10.9 0 0 1 12 5c5 0 9 3.6 10.5 7-.6 1.3-1.4 2.5-2.5 3.6M6.2 6.8C4 8.3 2.4 10.4 1.5 12c1.5 3.4 5.5 7 10.5 7 1.4 0 2.7-.3 3.9-.8" />
-                </svg>
-                <svg v-else viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </button>
-            </div>
-            <span v-if="erroPalavraPasse" id="palavra-passe-erro" class="campo__erro">{{ erroPalavraPasse }}</span>
-          </div>
-
-          <button type="submit" class="botao-entrar" :disabled="auth.aCarregar">
-            <span v-if="auth.aCarregar" class="spinner" aria-hidden="true" />
-            {{ auth.aCarregar ? 'A entrar…' : 'Entrar' }}
-          </button>
-        </form>
-      </div>
-    </section>
+        <button type="submit" class="botao-entrar" :disabled="auth.aCarregar">
+          <span v-if="auth.aCarregar" class="spinner" aria-hidden="true" />
+          {{ auth.aCarregar ? 'A entrar…' : 'Entrar' }}
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .tela-login {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-
-/* ---------- painel de marca ---------- */
-.painel-marca {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  background: linear-gradient(160deg, var(--cor-primaria-700), var(--cor-primaria-500));
-  color: white;
+  padding: 1.5rem;
+  background: var(--cor-fundo);
+  overflow: hidden;
 }
 
-.painel-marca__conteudo {
-  max-width: 24rem;
+/* ---------- fundo decorativo ---------- */
+.fundo-decorativo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mancha {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+
+.mancha--verde {
+  width: 34rem;
+  height: 34rem;
+  top: -12rem;
+  left: -10rem;
+  background: var(--cor-primaria-400);
+  opacity: 0.45;
+}
+
+.mancha--laranja {
+  width: 28rem;
+  height: 28rem;
+  bottom: -10rem;
+  right: -8rem;
+  background: #ff8a3d;
+  opacity: 0.35;
+}
+
+.mancha--teal {
+  width: 22rem;
+  height: 22rem;
+  bottom: 6rem;
+  left: 10%;
+  background: var(--cor-teal-500);
+  opacity: 0.25;
+}
+
+/* ---------- cartão ---------- */
+.cartao-login {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.75rem;
   text-align: center;
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 1.75rem;
+  box-shadow: 0 32px 64px -20px rgb(16 40 30 / 0.28);
+  padding: 2.5rem 2.25rem;
+  animation: entrada 0.45s ease-out;
 }
 
-/* O logo é a peça central do painel: um cartão branco bem visível, para
-   as cores da marca (incluindo o verde do "ECO") nunca se misturarem
-   com o gradiente verde de fundo. */
-.painel-marca__logo-card {
-  background: rgb(255 255 255 / 0.97);
-  border-radius: 1.5rem;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 24px 48px -12px rgb(10 30 20 / 0.45);
+@keyframes entrada {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.painel-marca__imagem {
+.cartao-login__logo {
   display: block;
-  width: 15rem;
+  width: 9.5rem;
   max-width: 100%;
   height: auto;
+  margin-bottom: 0.6rem;
 }
 
-.painel-marca h1 {
-  font-size: 1.7rem;
-  line-height: 1.3;
+.cartao-login__tagline {
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+  line-height: 1.4;
+  max-width: 18rem;
+}
+
+.cartao-login__divisor {
+  width: 2.75rem;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--cor-primaria-500), var(--cor-teal-500));
+  margin: 1.5rem 0;
+}
+
+.cartao-login h2 {
+  font-family: var(--fonte-titulo);
+  font-size: 1.45rem;
   font-weight: 600;
-}
-
-.painel-marca p {
-  color: rgb(255 255 255 / 0.88);
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.cabecalho-mobile {
-  display: none;
-  margin-bottom: 1.75rem;
-  text-align: center;
-}
-
-.cabecalho-mobile__imagem {
-  height: 5.5rem;
-  width: auto;
-  max-width: 100%;
-}
-
-/* ---------- painel do formulário ---------- */
-.painel-formulario {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: var(--cor-fundo);
-}
-
-.cartao-formulario {
-  width: 100%;
-  max-width: 24rem;
-  background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra);
-  padding: 2.25rem 2rem;
-}
-
-.cartao-formulario h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
   color: var(--cor-texto);
 }
 
 .subtitulo {
   margin-top: 0.35rem;
   color: var(--cor-texto-suave);
-  font-size: 0.925rem;
+  font-size: 0.9rem;
   line-height: 1.4;
 }
 
 form {
+  width: 100%;
   margin-top: 1.75rem;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+  text-align: left;
 }
 
 .campo {
@@ -320,6 +338,7 @@ form {
 }
 
 .alerta {
+  width: 100%;
   margin-top: 1.25rem;
   padding: 0.7rem 0.85rem;
   border-radius: var(--raio-sm);
@@ -327,15 +346,17 @@ form {
   color: var(--cor-erro);
   font-size: 0.875rem;
   line-height: 1.4;
+  text-align: left;
 }
 
 .botao-entrar {
+  width: 100%;
   margin-top: 0.4rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem 1rem;
+  padding: 0.75rem 1rem;
   font-size: 0.95rem;
   font-weight: 600;
   color: white;
@@ -380,25 +401,14 @@ form {
 }
 
 /* ---------- responsivo ---------- */
-@media (max-width: 860px) {
-  .tela-login {
-    grid-template-columns: 1fr;
+@media (max-width: 480px) {
+  .cartao-login {
+    padding: 2rem 1.5rem;
+    border-radius: 1.25rem;
   }
 
-  .painel-marca {
-    display: none;
-  }
-
-  .cabecalho-mobile {
-    display: block;
-  }
-
-  .painel-formulario {
-    padding: 1.5rem;
-  }
-
-  .cartao-formulario {
-    padding: 1.75rem 1.5rem;
+  .cartao-login__logo {
+    width: 8rem;
   }
 }
 </style>
