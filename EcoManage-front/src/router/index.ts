@@ -63,7 +63,12 @@ const router = createRouter({
       component: () => import('@/views/RelatoriosView.vue'),
       meta: { requerAuth: true },
     },
-    // (Próximas telas — pessoas... — entram aqui com meta.requerAuth.)
+    {
+      path: '/contactos',
+      name: 'pessoas',
+      component: () => import('@/views/PessoasView.vue'),
+      meta: { requerAuth: true },
+    },
   ],
 })
 

@@ -21,7 +21,7 @@ const itens = [
   { nome: 'Empréstimos & Dívidas', rota: 'emprestimos', pronto: true, icone: 'emprestimos' },
   { nome: 'Materiais & Stock', rota: 'materiais', pronto: true, icone: 'materiais' },
   { nome: 'Despesas', rota: 'despesas', pronto: true, icone: 'despesas' },
-  { nome: 'Contactos', rota: 'pessoas', pronto: false, icone: 'contactos' },
+  { nome: 'Contactos', rota: 'pessoas', pronto: true, icone: 'contactos' },
   { nome: 'Relatórios', rota: 'relatorios', pronto: true, icone: 'relatorios' },
   { nome: 'Configurações', rota: 'config', pronto: false, icone: 'config' },
 ]
