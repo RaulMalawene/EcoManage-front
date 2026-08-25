@@ -10,7 +10,7 @@ const auth = useAuthStore()
 const menuAberto = ref(false)
 const aSair = ref(false)
 
-// Itens do menu. 'pronto: false' marca telas ainda por construir —
+// Itens do menu. 'pronto: false' marca telas ainda por construir:
 // aparecem esbatidas e não navegam, para o dono ver o mapa completo
 // do sistema sem clicar em algo que ainda não existe.
 const itens = [

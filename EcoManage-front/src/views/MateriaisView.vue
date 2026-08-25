@@ -74,7 +74,7 @@ function progresso(m: MaterialStock) {
   return Math.min(100, (m.stock_kg / m.limite_alerta_kg) * 100)
 }
 
-// Materiais mais longe de atingir o limite — os que precisam de mais
+// Materiais mais longe de atingir o limite: os que precisam de mais
 // compra para valer a pena vender (equivalente aos "alertas de repor").
 const paraRepor = computed(() =>
   materiais.value
@@ -84,11 +84,11 @@ const paraRepor = computed(() =>
 )
 
 // --- Modal "Novo Material" / "Adicionar Stock" --------------------------
-// Não existe endpoint para só "somar kg" a um material — usa-se sempre
+// Não existe endpoint para só "somar kg" a um material, usa-se sempre
 // POST /materiais/{id}/stock-inicial (que acumula a cada chamada). Um
 // material novo cria-se primeiro em POST /materiais; a entrada de stock
 // inicial é opcional nesse fluxo (o normal, no dia-a-dia, é o stock subir
-// através de uma Compra — ver módulo Compras).
+// através de uma Compra, ver módulo Compras).
 interface FormMaterial {
   modo: 'novo' | 'stock'
   material_id: number | null
@@ -186,7 +186,7 @@ async function guardar() {
 // --- Modal "Registar Quebra" ---------------------------------------------
 // POST /materiais/{id}/quebra: kg perdidos (humidade, danos, manuseamento…)
 // que saem do stock sem terem sido vendidos. Reduz stock_kg e soma a
-// total_quebras_kg — não mexe no custo médio nem entra como receita.
+// total_quebras_kg, não mexe no custo médio nem entra como receita.
 // GET /materiais/{id}/quebras devolve o histórico (cada linha é um
 // movimento de stock com origem "Quebra"), mostrado aqui como contexto.
 interface MovimentoQuebra {
@@ -218,7 +218,7 @@ async function carregarHistoricoQuebras() {
     const { data } = await api.get(`/materiais/${materialQuebra.value.id}/quebras`)
     historicoQuebras.value = data.dados.itens || []
   } catch {
-    // Histórico é só informativo — se falhar, o formulário continua utilizável.
+    // Histórico é só informativo, se falhar, o formulário continua utilizável.
   } finally {
     aCarregarHistorico.value = false
   }
@@ -242,7 +242,7 @@ function erroCampoQuebra(campo: string) {
   return errosCampoQuebra.value[campo]?.[0] || ''
 }
 
-// Fica no modal depois de guardar (em vez de fechar) — assim dá para
+// Fica no modal depois de guardar (em vez de fechar), assim dá para
 // registar várias quebras seguidas e ver logo cada uma no histórico.
 async function guardarQuebra() {
   if (!materialQuebra.value) return
@@ -259,7 +259,7 @@ async function guardarQuebra() {
 
     Object.assign(formQuebra, formQuebraVazio())
     await Promise.all([carregarHistoricoQuebras(), carregar()])
-    // `carregar()` troca as referências em `materiais` — realinha o material
+    // `carregar()` troca as referências em `materiais`, realinha o material
     // do modal para o stock/quebras acumuladas ficarem actualizados no ecrã.
     materialQuebra.value = materiais.value.find((m) => m.id === materialQuebra.value?.id) ?? materialQuebra.value
   } catch (e) {
@@ -400,7 +400,7 @@ async function guardarQuebra() {
                 </div>
               </td>
               <td class="ao-fim forte nowrap">{{ kg(m.stock_kg) }} kg</td>
-              <td class="ao-fim cinza nowrap">{{ m.limite_alerta_kg ? kg(m.limite_alerta_kg) + ' kg' : '—' }}</td>
+              <td class="ao-fim cinza nowrap">{{ m.limite_alerta_kg ? kg(m.limite_alerta_kg) + ' kg' : '-' }}</td>
               <td class="ao-fim nowrap">{{ mt(m.preco_venda_kg) }}</td>
               <td class="ao-centro">
                 <span class="etiqueta" :class="`etiqueta--${estado(m).classe}`">{{ estado(m).texto }}</span>
@@ -533,7 +533,7 @@ async function guardarQuebra() {
       <div v-if="modalQuebraAberto" class="modal-veu" @click.self="fecharModalQuebra">
         <div class="modal-cartao modal-cartao--largo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-quebra">
           <div class="modal-cabecalho">
-            <h3 id="titulo-modal-quebra">Registar Quebra — {{ materialQuebra?.nome }}</h3>
+            <h3 id="titulo-modal-quebra">Registar Quebra: {{ materialQuebra?.nome }}</h3>
             <button type="button" class="modal-fechar" aria-label="Fechar" @click="fecharModalQuebra">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />

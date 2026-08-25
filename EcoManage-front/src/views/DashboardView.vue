@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { Bar, Doughnut } from 'vue-chartjs'
+import type { ChartOptions, TooltipItem } from 'chart.js'
 import AppLayout from '@/components/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
@@ -66,7 +67,7 @@ const cartoes = computed(() => {
   ]
 })
 
-// Composição de stock por material (valor imobilizado) — dados que já
+// Composição de stock por material (valor imobilizado): dados que já
 // vinham em GET /materiais, sem precisar de nenhum endpoint novo. Mostra os
 // 4 materiais de maior valor e agrupa o resto em "Outros" (nunca mais de 5
 // fatias, para as cores categóricas não precisarem de repetir).
@@ -91,7 +92,7 @@ const dadosComposicaoStock = computed(() => ({
   ],
 }))
 
-const opcoesComposicaoStock = computed<any>(() => {
+const opcoesComposicaoStock = computed<ChartOptions<'doughnut'>>(() => {
   const total = composicaoStock.value.reduce((s, c) => s + c.valor, 0)
   return {
     responsive: true,
@@ -101,9 +102,10 @@ const opcoesComposicaoStock = computed<any>(() => {
       legend: { position: 'right', labels: { boxWidth: 8, padding: 12 } },
       tooltip: {
         callbacks: {
-          label: (ctx: any) => {
-            const pct = total > 0 ? Math.round((ctx.raw / total) * 100) : 0
-            return ` ${mt(ctx.raw)} (${pct}%)`
+          label: (ctx: TooltipItem<'doughnut'>) => {
+            const valor = Number(ctx.raw)
+            const pct = total > 0 ? Math.round((valor / total) * 100) : 0
+            return ` ${mt(valor)} (${pct}%)`
           },
         },
       },
@@ -113,7 +115,7 @@ const opcoesComposicaoStock = computed<any>(() => {
 })
 
 // --- Fluxo de caixa mensal --------------------------------------------
-// GET /caixa/fluxo-mensal?meses=6 — endpoint NOVO, ainda por criar no
+// GET /caixa/fluxo-mensal?meses=6: endpoint NOVO, ainda por criar no
 // backend (ver prompt fornecido ao dono). Devolve, do mês mais antigo para
 // o mais recente, {mes, mes_rotulo, entradas, saidas, saldo_periodo}. Sem
 // ele, o painel mostra "sem dados" em vez de rebentar a tela.
@@ -164,16 +166,16 @@ const dadosFluxoMensal = computed(() => ({
   ],
 }))
 
-const opcoesFluxoMensal = computed<any>(() => ({
+const opcoesFluxoMensal = computed<ChartOptions<'bar'>>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   scales: {
     x: { grid: { display: false }, border: { display: false } },
-    y: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+    y: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v) => mtCompacto(Number(v)) } },
   },
   plugins: {
     legend: { position: 'top', align: 'start' },
-    tooltip: { callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${mt(ctx.parsed.y)}` } },
+    tooltip: { callbacks: { label: (ctx: TooltipItem<'bar'>) => `${ctx.dataset.label}: ${mt(ctx.parsed.y)}` } },
   },
 }))
 
@@ -187,7 +189,7 @@ function estadoDevedor(estado: string) {
 }
 
 // --- modal "Adicionar stock" -------------------------------------------
-// Não existe endpoint para só "somar kg" a um material — usa-se sempre
+// Não existe endpoint para só "somar kg" a um material: usa-se sempre
 // POST /materiais/{id}/stock-inicial (que acumula a cada chamada); para
 // um material novo cria-se primeiro em POST /materiais.
 interface FormStock {
@@ -366,7 +368,7 @@ async function guardarStock() {
               <tr v-for="d in devedores.slice(0, 5)" :key="d.id">
                 <td>{{ d.pessoa }}</td>
                 <td>{{ mt(d.saldo_devedor) }}</td>
-                <td>{{ d.data_vencimento || '—' }}</td>
+                <td>{{ d.data_vencimento || '-' }}</td>
                 <td>
                   <span class="etiqueta" :class="`etiqueta--${estadoDevedor(d.estado).classe}`">
                     {{ estadoDevedor(d.estado).texto }}
@@ -449,7 +451,7 @@ async function guardarStock() {
                 <label for="material-existente">Material</label>
                 <select id="material-existente" v-model.number="formStock.material_id">
                   <option v-for="m in materiais" :key="m.id" :value="m.id">
-                    {{ m.nome }} — {{ Number(m.stock_kg).toFixed(0) }}kg em stock
+                    {{ m.nome }}, {{ Number(m.stock_kg).toFixed(0) }}kg em stock
                   </option>
                 </select>
               </div>

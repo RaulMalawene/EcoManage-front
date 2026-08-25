@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 /**
  * Cliente HTTP único para toda a aplicação.
  * Base URL: VITE_API_URL (ex.: http://localhost:8000) + "/api".
- * Configura-se em .env / .env.local — ver .env.example.
+ * Configura-se em .env / .env.local (ver .env.example).
  */
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL ?? ''}/api`,

@@ -58,7 +58,7 @@ async function submeter() {
           <span>Jay Recicly</span>
         </div>
         <h1>Gestão simples para operações mais sustentáveis.</h1>
-        <p>Pessoas, materiais e compras — tudo num só lugar, pronto para a tua equipa.</p>
+        <p>Pessoas, materiais e compras: tudo num só lugar, pronto para a tua equipa.</p>
       </div>
     </section>
 

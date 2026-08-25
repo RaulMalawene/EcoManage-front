@@ -1,5 +1,5 @@
 /**
- * Configuração partilhada do Chart.js — registo dos componentes usados e os
+ * Configuração partilhada do Chart.js: regista os componentes usados e define os
  * valores por omissão (fonte, cores de eixo/grelha, tooltip) para que todos
  * os gráficos da app pareçam desenhados pela mesma mão, sem repetir isto em
  * cada tela.

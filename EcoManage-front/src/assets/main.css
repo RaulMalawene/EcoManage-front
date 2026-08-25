@@ -1,10 +1,10 @@
 /* ---------------------------------------------------------------------
- * EcoManage — design tokens base
+ * EcoManage: design tokens base
  * Pequeno "design system" em CSS puro partilhado por todas as telas.
  * ------------------------------------------------------------------- */
 
 :root {
-  /* marca — tons de verde (eco) */
+  /* marca: tons de verde (eco) */
   --cor-primaria-50: #ecfdf3;
   --cor-primaria-100: #d1fae0;
   --cor-primaria-200: #a7f3c8;
@@ -13,21 +13,21 @@
   --cor-primaria-600: #167d45;
   --cor-primaria-700: #146339;
 
-  /* acento — verde-azulado (stock / materiais), harmoniza com o verde primário */
+  /* acento verde-azulado (stock / materiais): harmoniza com o verde primário */
   --cor-teal-50: #e9fbf7;
   --cor-teal-100: #c8f2ea;
   --cor-teal-500: #0f9488;
   --cor-teal-600: #0c766d;
   --cor-teal-700: #0a5c54;
 
-  /* acento — âmbar (lucro / pendências), quente e complementar ao verde */
+  /* acento âmbar (lucro / pendências): quente e complementar ao verde */
   --cor-ambar-50: #fef6e6;
   --cor-ambar-100: #fbe7bd;
   --cor-ambar-500: #d99a1f;
   --cor-ambar-600: #b17f16;
   --cor-ambar-700: #8a6310;
 
-  /* acento — índigo (informativo / referência secundária) */
+  /* acento índigo: informativo / referência secundária */
   --cor-indigo-50: #eef1fd;
   --cor-indigo-100: #dbe1fa;
   --cor-indigo-500: #5468d4;
@@ -55,7 +55,7 @@
   --sombra: 0 8px 24px -8px rgb(22 33 28 / 0.16);
   --sombra-foco: 0 0 0 3px rgb(31 157 87 / 0.25);
 
-  /* tipografia — Inter para leitura corrida, Poppins para títulos e números
+  /* tipografia: Inter para leitura corrida, Poppins para títulos e números
      de destaque (geometria mais arredondada, transmite uma marca própria) */
   --fonte: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
   --fonte-titulo: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
@@ -106,7 +106,7 @@ a {
 
 /* ---------------------------------------------------------------------
  * Componentes partilhados entre telas (Painel, Livro-caixa, e as
- * próximas). Mantidos aqui — não em <style scoped> — precisamente para
+ * próximas). Mantidos aqui e não em <style scoped>, precisamente para
  * que todas as telas internas fiquem visualmente em conformidade sem
  * duplicar regras em cada ficheiro.
  * ------------------------------------------------------------------- */
@@ -146,7 +146,7 @@ a {
    friso superior + selo do ícone) consoante `card-kpi--<cor>`, para que a
    grelha de indicadores fique legível ao primeiro relance em vez de ser
    uma fila de cartões brancos iguais. As cores derivam sempre do verde de
-   marca — nunca competem com ele. */
+   marca e nunca competem com ele. */
 .card-kpi {
   position: relative;
   background: var(--cor-superficie);
@@ -169,7 +169,7 @@ a {
   box-shadow: 0 12px 28px -10px rgb(22 33 28 / 0.22);
 }
 
-/* Verde — indicador principal da página (o número que manda). */
+/* Verde: indicador principal da página (o número que manda). */
 .card-kpi--verde {
   background: linear-gradient(160deg, var(--cor-primaria-50) 0%, var(--cor-superficie) 62%);
   border-color: var(--cor-primaria-100);
@@ -178,7 +178,7 @@ a {
   background: linear-gradient(90deg, var(--cor-primaria-400), var(--cor-primaria-600));
 }
 
-/* Verde-azulado — stock e materiais. */
+/* Verde-azulado: stock e materiais. */
 .card-kpi--teal {
   background: linear-gradient(160deg, var(--cor-teal-50) 0%, var(--cor-superficie) 62%);
   border-color: var(--cor-teal-100);
@@ -187,7 +187,7 @@ a {
   background: linear-gradient(90deg, var(--cor-teal-500), var(--cor-teal-700));
 }
 
-/* Âmbar — lucro, pendências, quantidades em destaque. */
+/* Âmbar: lucro, pendências, quantidades em destaque. */
 .card-kpi--ambar {
   background: linear-gradient(160deg, var(--cor-ambar-50) 0%, var(--cor-superficie) 62%);
   border-color: var(--cor-ambar-100);
@@ -196,7 +196,7 @@ a {
   background: linear-gradient(90deg, var(--cor-ambar-500), var(--cor-ambar-700));
 }
 
-/* Índigo — dados informativos/secundários (ex.: saldo trazido de outro módulo). */
+/* Índigo: dados informativos/secundários (ex.: saldo trazido de outro módulo). */
 .card-kpi--indigo {
   background: linear-gradient(160deg, var(--cor-indigo-50) 0%, var(--cor-superficie) 62%);
   border-color: var(--cor-indigo-100);
@@ -205,7 +205,7 @@ a {
   background: linear-gradient(90deg, var(--cor-indigo-500), var(--cor-indigo-700));
 }
 
-/* Vermelho — dívidas, saídas de caixa, valores negativos. */
+/* Vermelho: dívidas, saídas de caixa, valores negativos. */
 .card-kpi--vermelho {
   background: linear-gradient(160deg, var(--cor-erro-fundo) 0%, var(--cor-superficie) 62%);
   border-color: #f6d4cf;
@@ -214,7 +214,7 @@ a {
   background: linear-gradient(90deg, #e8735f, var(--cor-erro));
 }
 
-/* Cartão "herói" — o número mais importante da página, em destaque total. */
+/* Cartão "herói": o número mais importante da página, em destaque total. */
 .card-kpi--destaque {
   background: linear-gradient(135deg, var(--cor-primaria-700), var(--cor-teal-500));
   border-color: transparent;

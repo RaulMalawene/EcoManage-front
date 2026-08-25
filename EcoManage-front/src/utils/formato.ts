@@ -11,7 +11,7 @@ export function mt(valor: number | null | undefined, opcoes: { abs?: boolean } =
 }
 
 export function dataCurta(data: string | null | undefined) {
-  if (!data) return '—'
+  if (!data) return '-'
   return new Date(data).toLocaleDateString('pt-MZ', {
     day: '2-digit',
     month: '2-digit',

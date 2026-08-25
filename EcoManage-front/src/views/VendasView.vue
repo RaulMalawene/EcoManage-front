@@ -82,7 +82,7 @@ const cartoes = computed(() => [
   { rotulo: 'Total em Dívida', valor: dashboard.value?.total_em_divida, cor: 'vermelho', icone: 'emprestimos' },
 ])
 
-// Materiais com stock baixo — proxy para "alertas de stock": os que têm
+// Materiais com stock baixo, proxy para "alertas de stock": os que têm
 // limite definido, ordenados pelos que têm menos stock disponível.
 const materiaisAlerta = computed(() =>
   [...materiais.value].filter((m) => m.limite_alerta_kg).sort((a, b) => a.stock_kg - b.stock_kg).slice(0, 3),
@@ -90,7 +90,7 @@ const materiaisAlerta = computed(() =>
 
 // Resume os materiais de uma venda numa linha ("Ferro (50kg), Cobre (10kg)").
 function materiaisResumo(venda: Venda) {
-  if (!venda.itens?.length) return '—'
+  if (!venda.itens?.length) return '-'
   return venda.itens.map((i) => `${i.material_nome} (${Number(i.quantidade_kg).toFixed(0)}kg)`).join(', ')
 }
 
@@ -447,7 +447,7 @@ async function guardarVenda() {
                   <label :for="`material-${i}`">Material</label>
                   <select :id="`material-${i}`" v-model.number="item.material_id" @change="aoEscolherMaterial(item)">
                     <option v-for="m in materiais" :key="m.id" :value="m.id">
-                      {{ m.nome }} — {{ Number(m.stock_kg).toFixed(0) }}kg disponível
+                      {{ m.nome }}, {{ Number(m.stock_kg).toFixed(0) }}kg disponível
                     </option>
                   </select>
                   <span v-if="erroItemVenda(i, 'material_id')" class="campo-modal__erro">

@@ -48,7 +48,7 @@ async function carregar() {
       api.get('/materiais'),
     ])
 
-    // CompraController@index só devolve {itens, paginacao} — sem "resumo"
+    // CompraController@index só devolve {itens, paginacao}, sem "resumo"
     // (confirmado no código do backend). O total/peso desta página são
     // calculados no cliente a partir dos itens carregados (ver `resumo`).
     compras.value = resCompras.data.dados.itens || []
@@ -65,7 +65,7 @@ async function carregar() {
 onMounted(carregar)
 
 // Total e peso desta página (o backend não devolve um resumo agregado
-// para /compras — só para /vendas e /emprestimos).
+// para /compras, só para /vendas e /emprestimos).
 const resumo = computed(() => ({
   total_comprado: compras.value.reduce((s, c) => s + Number(c.total || 0), 0),
   peso_total_kg: compras.value.reduce(
@@ -84,7 +84,7 @@ function formatoKg(valor: number | null | undefined) {
   return new Intl.NumberFormat('pt-MZ', { maximumFractionDigits: 0 }).format(valor || 0)
 }
 
-// Fornecedores mais activos entre as compras carregadas — soma o total
+// Fornecedores mais activos entre as compras carregadas: soma o total
 // pago a cada um e ordena do maior para o menor.
 const fornecedoresDestaque = computed(() => {
   const somas = new Map<string, number>()
@@ -97,7 +97,7 @@ const fornecedoresDestaque = computed(() => {
     .slice(0, 4)
 })
 
-// Materiais com stock baixo — útil aqui para decidir o que vale a pena
+// Materiais com stock baixo: útil aqui para decidir o que vale a pena
 // comprar a seguir (mesma lógica usada nas Vendas).
 const materiaisAlerta = computed(() =>
   [...materiais.value].filter((m) => m.limite_alerta_kg).sort((a, b) => a.stock_kg - b.stock_kg).slice(0, 3),
@@ -105,7 +105,7 @@ const materiaisAlerta = computed(() =>
 
 // Resume os materiais de uma compra numa linha ("Ferro (50kg), Cobre (10kg)").
 function materiaisResumo(compra: Compra) {
-  if (!compra.itens?.length) return '—'
+  if (!compra.itens?.length) return '-'
   return compra.itens.map((i) => `${i.material_nome} (${Number(i.quantidade_kg).toFixed(0)}kg)`).join(', ')
 }
 
@@ -237,7 +237,7 @@ async function guardarCompra() {
 
     fecharModalCompra()
     paginaActual.value = 1
-    await carregar() // stock e valor em caixa mudam com a compra — recarrega tudo
+    await carregar() // stock e valor em caixa mudam com a compra, recarrega tudo
   } catch (e) {
     if (axios.isAxiosError(e) && e.response?.data?.erros) {
       errosCampoCompra.value = e.response.data.erros
@@ -486,7 +486,7 @@ async function guardarCompra() {
                   <label :for="`material-${i}`">Material</label>
                   <select :id="`material-${i}`" v-model.number="item.material_id" @change="aoEscolherMaterial(item)">
                     <option v-for="m in materiais" :key="m.id" :value="m.id">
-                      {{ m.nome }} — {{ Number(m.stock_kg).toFixed(0) }}kg em stock
+                      {{ m.nome }}, {{ Number(m.stock_kg).toFixed(0) }}kg em stock
                     </option>
                   </select>
                   <span v-if="erroItemCompra(i, 'material_id')" class="campo-modal__erro">

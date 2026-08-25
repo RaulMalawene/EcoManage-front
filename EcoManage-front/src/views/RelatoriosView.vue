@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { Bar, Line } from 'vue-chartjs'
+import type { ChartOptions, TooltipItem } from 'chart.js'
 import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
 import { mt, dataIsoLocal } from '@/utils/formato'
@@ -55,11 +56,11 @@ onMounted(carregar)
 const temLucro = computed(() => (dre.value?.lucro_liquido || 0) >= 0)
 
 // --- Gráfico em cascata (waterfall) do DRE ---------------------------------
-// Cada barra parte de onde a anterior chegou — a visualização correcta para
+// Cada barra parte de onde a anterior chegou, a visualização correcta para
 // uma demonstração de resultados, em vez de uma tabela. Os pontos de
 // partida/chegada usam sempre um valor que o backend já devolveu
 // directamente (receita_vendas, lucro_bruto, resultado_operacional,
-// lucro_liquido) ou uma soma simples entre dois desses valores — nunca um
+// lucro_liquido) ou uma soma simples entre dois desses valores, nunca um
 // cálculo novo, para não haver risco de desalinhar do que o DreService diz.
 const linhasDre = computed(() => {
   if (!dre.value) return []
@@ -124,7 +125,7 @@ const dadosWaterfall = computed(() => ({
   ],
 }))
 
-const opcoesWaterfall = computed<any>(() => ({
+const opcoesWaterfall = computed<ChartOptions<'bar'>>(() => ({
   indexAxis: 'y',
   responsive: true,
   maintainAspectRatio: false,
@@ -132,7 +133,7 @@ const opcoesWaterfall = computed<any>(() => ({
     x: {
       grid: { color: PALETA.borda },
       border: { display: false },
-      ticks: { callback: (v: number) => mtCompacto(Number(v)) },
+      ticks: { callback: (v) => mtCompacto(Number(v)) },
     },
     y: { grid: { display: false }, border: { display: false } },
   },
@@ -140,8 +141,8 @@ const opcoesWaterfall = computed<any>(() => ({
     legend: { display: false },
     tooltip: {
       callbacks: {
-        title: (items: any[]) => items[0].label,
-        label: (ctx: any) => {
+        title: (items: TooltipItem<'bar'>[]) => String(items[0]?.label ?? ''),
+        label: (ctx: TooltipItem<'bar'>) => {
           const l = linhasDre.value[ctx.dataIndex]
           if (!l) return ''
           return (l.valor < 0 ? '− ' : '') + mt(Math.abs(l.valor))
@@ -168,18 +169,18 @@ const dadosComposicao = computed(() => {
   }
 })
 
-const opcoesComposicao = computed<any>(() => ({
+const opcoesComposicao = computed<ChartOptions<'bar'>>(() => ({
   indexAxis: 'y',
   responsive: true,
   maintainAspectRatio: false,
   layout: { padding: { right: 56 } },
   scales: {
-    x: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+    x: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v) => mtCompacto(Number(v)) } },
     y: { grid: { display: false }, border: { display: false } },
   },
   plugins: {
     legend: { display: false },
-    tooltip: { callbacks: { label: (ctx: any) => mt(ctx.raw) } },
+    tooltip: { callbacks: { label: (ctx: TooltipItem<'bar'>) => mt(Number(ctx.raw)) } },
     datalabels: {
       display: true,
       anchor: 'end',
@@ -214,18 +215,18 @@ const dadosDespesasCategoria = computed(() => ({
   ],
 }))
 
-const opcoesDespesasCategoria = computed<any>(() => ({
+const opcoesDespesasCategoria = computed<ChartOptions<'bar'>>(() => ({
   indexAxis: 'y',
   responsive: true,
   maintainAspectRatio: false,
   layout: { padding: { right: 56 } },
   scales: {
-    x: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+    x: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v) => mtCompacto(Number(v)) } },
     y: { grid: { display: false }, border: { display: false } },
   },
   plugins: {
     legend: { display: false },
-    tooltip: { callbacks: { label: (ctx: any) => mt(ctx.raw) } },
+    tooltip: { callbacks: { label: (ctx: TooltipItem<'bar'>) => mt(Number(ctx.raw)) } },
     datalabels: {
       display: true,
       anchor: 'end',
@@ -239,7 +240,7 @@ const opcoesDespesasCategoria = computed<any>(() => ({
 }))
 
 // --- Evolução mensal ------------------------------------------------------
-// GET /relatorios/dre-mensal?meses=6 — endpoint NOVO, ainda por criar no
+// GET /relatorios/dre-mensal?meses=6: endpoint NOVO, ainda por criar no
 // backend (ver prompt fornecido ao dono). Devolve, do mês mais antigo para
 // o mais recente, um DRE completo por mês (o mesmo formato de /relatorios/dre,
 // com "mes"/"mes_rotulo" a mais). Enquanto o endpoint não existir, esta
@@ -258,7 +259,7 @@ async function carregarEvolucaoMensal() {
     const { data } = await api.get('/relatorios/dre-mensal', { params: { meses: 6 } })
     evolucaoMensal.value = data.dados || []
   } catch {
-    // Endpoint ainda não existe ou falhou — o painel fica vazio, sem partir a tela.
+    // Endpoint ainda não existe ou falhou: o painel fica vazio, sem partir a tela.
     evolucaoMensal.value = []
   } finally {
     aCarregarEvolucao.value = false
@@ -303,17 +304,17 @@ const dadosEvolucao = computed(() => ({
   ],
 }))
 
-const opcoesEvolucao = computed<any>(() => ({
+const opcoesEvolucao = computed<ChartOptions<'line'>>(() => ({
   responsive: true,
   maintainAspectRatio: false,
   interaction: { mode: 'index', intersect: false },
   scales: {
     x: { grid: { display: false }, border: { display: false } },
-    y: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v: number) => mtCompacto(Number(v)) } },
+    y: { grid: { color: PALETA.borda }, border: { display: false }, ticks: { callback: (v) => mtCompacto(Number(v)) } },
   },
   plugins: {
     legend: { position: 'top', align: 'start' },
-    tooltip: { callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${mt(ctx.parsed.y)}` } },
+    tooltip: { callbacks: { label: (ctx: TooltipItem<'line'>) => `${ctx.dataset.label}: ${mt(ctx.parsed.y)}` } },
   },
 }))
 </script>
@@ -356,7 +357,7 @@ const opcoesEvolucao = computed<any>(() => ({
         <p>
           De {{ mt(dre.receita_vendas) }} em vendas, {{ temLucro ? 'sobrou um lucro líquido de' : 'ficou um prejuízo líquido de' }}
           <strong>{{ mt(Math.abs(dre.lucro_liquido)) }}</strong>
-          — uma margem de {{ dre.margem_liquida_pct }}%.
+          , uma margem de {{ dre.margem_liquida_pct }}% sobre o total vendido.
         </p>
       </section>
 
@@ -396,7 +397,7 @@ const opcoesEvolucao = computed<any>(() => ({
       </section>
 
       <div class="grelha">
-        <!-- O DRE em si — a peça principal -->
+        <!-- O DRE em si, a peça principal -->
         <section class="painel-bloco">
           <h2>Demonstração de Resultados (DRE)</h2>
           <p class="subtitulo">Como se chega do total de vendas ao lucro real, passo a passo.</p>
@@ -410,7 +411,7 @@ const opcoesEvolucao = computed<any>(() => ({
               <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" stroke-linecap="round" />
             </svg>
             Isto mede o <strong>lucro</strong>, não o dinheiro em caixa. Uma venda a crédito conta aqui, mesmo antes de o
-            dinheiro entrar — para o saldo real, consulta o Livro-caixa.
+            dinheiro entrar. Para o saldo real, consulta o Livro-caixa.
           </div>
         </section>
 
@@ -437,12 +438,12 @@ const opcoesEvolucao = computed<any>(() => ({
               <div class="em-breve-item">Comparação com período anterior</div>
               <div class="em-breve-item">Exportar PDF / Excel</div>
             </div>
-            <p class="em-breve-legenda">Em breve — requerem novos endpoints.</p>
+            <p class="em-breve-legenda">Em breve. Cada uma depende de um endpoint novo no backend.</p>
           </div>
         </aside>
       </div>
 
-      <!-- Evolução mensal — largura total, é a peça que mais beneficia de espaço -->
+      <!-- Evolução mensal, largura total, é a peça que mais beneficia de espaço -->
       <section class="painel-bloco painel-bloco--evolucao">
         <h2>Evolução Mensal</h2>
         <p class="subtitulo">Receita, despesas e lucro líquido dos últimos 6 meses.</p>
@@ -451,7 +452,7 @@ const opcoesEvolucao = computed<any>(() => ({
           <span class="spinner" aria-hidden="true"></span>
         </div>
         <p v-else-if="evolucaoMensal.length === 0" class="vazio">
-          Ainda sem dados suficientes para uma evolução mensal — este painel liga-se automaticamente assim que o endpoint
+          Ainda não há dados suficientes para uma evolução mensal. Este painel liga-se automaticamente assim que o endpoint
           <code>/relatorios/dre-mensal</code> existir no backend.
         </p>
         <div v-else class="grafico-alto">

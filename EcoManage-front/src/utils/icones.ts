@@ -1,6 +1,6 @@
 /**
  * Ícones de contorno (18x18) partilhados pela barra lateral e pelos
- * cartões de KPI do painel — a mesma forma em ambos os sítios reforça a
+ * cartões de KPI do painel: a mesma forma em ambos os sítios reforça a
  * ligação visual entre "este número" e "este menu".
  */
 export const ICONES: Record<string, string> = {

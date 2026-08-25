@@ -115,9 +115,9 @@ function irPara(p: number) {
 // { pessoa_id, valor_principal (obrigatório), juro_valor?, data?, data_vencimento?,
 // motivo?, tipo? ('dinheiro' | 'adiantamento_material' | 'material_emprestado',
 // por omissão 'dinheiro'), material_id?/quantidade_kg? (obrigatórios só quando
-// tipo = 'material_emprestado' — nesse caso o empréstimo sai directamente do
+// tipo = 'material_emprestado', nesse caso o empréstimo sai directamente do
 // stock do material escolhido, em vez de dinheiro do caixa; valor_principal
-// continua obrigatório mesmo assim, é o valor em MT que fica registado como dívida).
+// continua obrigatório mesmo assim: é o valor em MT que fica registado como dívida).
 // valor_total (mostrado na tabela/cartões) é calculado no backend = principal + juro.
 // O devedor pode ser escolhido de entre os já cadastrados (GET /pessoas?tipo=devedor)
 // ou criado ali mesmo (POST /pessoas).
@@ -179,7 +179,7 @@ async function abrirModalRegisto() {
   }
 
   // Ao contrário dos devedores, o stock muda com frequência (vendas, compras,
-  // quebras…) — recarrega sempre que o modal abre para os kg mostrados não
+  // quebras…), recarrega sempre que o modal abre para os kg mostrados não
   // ficarem desactualizados.
   aCarregarMateriais.value = true
   try {
@@ -245,7 +245,7 @@ async function guardarRegisto() {
 // POST /emprestimos/{id}/pagar (confirmado em PagamentoRequest/EmprestimoService):
 // { valor (obrigatório), data?, forma? ('dinheiro'|'material', por omissão
 // 'dinheiro'), material_id?/quantidade_kg? (só se forma='material') }. Este
-// modal cobre o caso mais comum — pagamento em dinheiro — enviando só `valor`;
+// modal cobre o caso mais comum (pagamento em dinheiro), enviando só `valor`;
 // o backend abate primeiro o juro em dívida e só depois o principal.
 const modalPagamentoAberto = ref(false)
 const emprestimoAPagar = ref<Emprestimo | null>(null)
@@ -445,7 +445,7 @@ async function guardarPagamento() {
               >
                 Pagar
               </button>
-              <span v-else class="cinza">—</span>
+              <span v-else class="cinza">-</span>
             </td>
           </tr>
         </tbody>
@@ -543,7 +543,7 @@ async function guardarPagamento() {
                 <select id="material-emprestimo" v-model.number="formEmprestimo.material_id" :disabled="aCarregarMateriais">
                   <option v-if="aCarregarMateriais" value="">A carregar materiais…</option>
                   <option v-for="m in materiais" :key="m.id" :value="m.id">
-                    {{ m.nome }} — {{ Number(m.stock_kg).toFixed(0) }}kg em stock
+                    {{ m.nome }}, {{ Number(m.stock_kg).toFixed(0) }}kg em stock
                   </option>
                 </select>
                 <span v-if="erroCampoRegisto('material_id')" class="campo-modal__erro">{{ erroCampoRegisto('material_id') }}</span>

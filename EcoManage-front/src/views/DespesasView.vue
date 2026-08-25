@@ -56,7 +56,7 @@ const despesasFiltradas = computed(() => {
   )
 })
 
-// Distribuição por grupo de DRE (dados já carregados) — para onde vai o
+// Distribuição por grupo de DRE (dados já carregados): para onde vai o
 // dinheiro do ponto de vista contabilístico.
 const porGrupo = computed(() => {
   const grupos = new Map<string, number>()
@@ -81,7 +81,7 @@ const porCategoria = computed(() => {
 
 const maiorCategoria = computed(() => porCategoria.value[0] ?? null)
 
-// Total desta página (não o total geral do servidor) — é a base correcta
+// Total desta página (não o total geral do servidor), é a base correcta
 // para as percentagens da distribuição por grupo, já que `porGrupo` só
 // soma o que está carregado.
 const totalPagina = computed(() => porGrupo.value.reduce((s, g) => s + g.valor, 0))
@@ -109,7 +109,7 @@ function irPara(p: number) {
 // POST /despesas: { categoria, descricao, valor, data?, data_competencia?,
 // grupo_dre? ('operacional'|'impostos_outros'|'nao_operacional', por omissão
 // 'operacional'), pessoa_id? }. `data` = quando o dinheiro saiu (caixa);
-// `data_competencia` = a que mês o gasto pertence (DRE) — só difere em casos
+// `data_competencia` = a que mês o gasto pertence (DRE), só difere em casos
 // como salário de Junho pago em Julho, por isso fica nas opções avançadas.
 const categoriasSugeridas = ['Renda', 'Salários', 'Transporte', 'Energia', 'Água', 'Combustível', 'Manutenção', 'Material de escritório', 'Outros']
 
@@ -158,7 +158,7 @@ async function guardar() {
   erroForm.value = ''
   errosCampo.value = {}
 
-  // Validação leve no cliente — feedback imediato antes de gastar um pedido.
+  // Validação leve no cliente, feedback imediato antes de gastar um pedido.
   if (!form.categoria.trim()) {
     erroForm.value = 'Escolha ou escreva a categoria.'
     return
@@ -266,7 +266,7 @@ async function guardar() {
             </svg>
           </span>
         </div>
-        <strong class="card-kpi__valor card-kpi__valor--ambar">{{ maiorCategoria?.nome || '—' }}</strong>
+        <strong class="card-kpi__valor card-kpi__valor--ambar">{{ maiorCategoria?.nome || '-' }}</strong>
         <small class="card-kpi__nota">{{ maiorCategoria ? mt(maiorCategoria.valor) + ' no total' : 'sem despesas ainda' }}</small>
       </div>
     </section>
@@ -402,7 +402,7 @@ async function guardar() {
 
             <div class="campo-modal">
               <label for="descricao-despesa">Descrição</label>
-              <input id="descricao-despesa" v-model="form.descricao" type="text" placeholder="ex.: Renda do armazém — Agosto" />
+              <input id="descricao-despesa" v-model="form.descricao" type="text" placeholder="ex.: Renda do armazém, Agosto" />
               <span v-if="erroCampo('descricao')" class="campo-modal__erro">{{ erroCampo('descricao') }}</span>
             </div>
 
@@ -424,7 +424,7 @@ async function guardar() {
               <select id="grupo-dre" v-model="form.grupo_dre">
                 <option value="operacional">Operacional (renda, salários, transporte…)</option>
                 <option value="impostos_outros">Impostos e outros</option>
-                <option value="nao_operacional">Não operacional (investimento — fora do lucro)</option>
+                <option value="nao_operacional">Não operacional (investimento, não conta para o lucro)</option>
               </select>
               <span class="campo-modal__ajuda">Decide se e onde a despesa entra no cálculo do lucro.</span>
             </div>

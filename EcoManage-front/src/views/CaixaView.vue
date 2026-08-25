@@ -36,7 +36,7 @@ const tipoFiltro = ref<'' | 'entrada' | 'saida'>('')
 const periodo = ref('30') // dias
 const paginaActual = ref(1)
 
-// Traduz o período (em dias) para datas de início/fim (em hora local —
+// Traduz o período (em dias) para datas de início/fim (em hora local:
 // toISOString() desliza um dia perto da meia-noite por causa do UTC).
 function intervaloDatas() {
   const fim = new Date()

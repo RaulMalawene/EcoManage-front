@@ -1,6 +1,6 @@
 /**
  * As mesmas cores do design system (ver `src/assets/main.css` :root),
- * mas como valores hex/rgb — o Chart.js desenha em <canvas>, que não lê
+ * mas como valores hex/rgb, o Chart.js desenha em <canvas>, que não lê
  * variáveis CSS directamente, por isso mantemos aqui uma cópia fiel.
  * Qualquer alteração de cor de marca tem de ser feita nos dois sítios.
  */
@@ -33,7 +33,7 @@ export const PALETA = {
   superficie: '#ffffff',
 } as const
 
-/** Ordem categórica fixa (a mesma usada nos cartões KPI em toda a app) —
+/** Ordem categórica fixa (a mesma usada nos cartões KPI em toda a app);
  * nunca gerar cores novas, sempre seguir esta ordem. */
 export const CORES_CATEGORICAS = [
   PALETA.primaria500,

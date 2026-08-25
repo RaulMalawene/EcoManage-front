@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, reactive, watch } from 'vue'
+import { ref, onMounted, reactive, watch } from 'vue'
 import axios from 'axios'
 import AppLayout from '@/components/AppLayout.vue'
 import api from '@/services/api'
@@ -60,7 +60,7 @@ async function carregar() {
 
 onMounted(carregar)
 
-// Pesquisa é no servidor (para funcionar bem com a paginação) — com um
+// Pesquisa é no servidor (para funcionar bem com a paginação), com um
 // pequeno atraso, para não disparar um pedido a cada tecla.
 let temporizadorPesquisa: ReturnType<typeof setTimeout> | undefined
 watch(pesquisa, () => {
@@ -102,7 +102,7 @@ async function carregarResumoContactos() {
       devedores: d.data.dados.paginacao?.total ?? 0,
     }
   } catch {
-    // Cartões de resumo são só um extra informativo — não impedem o resto da tela.
+    // Cartões de resumo são só um extra informativo, não impedem o resto da tela.
   }
 }
 
@@ -113,7 +113,7 @@ function iniciais(nome: string) {
   return nome.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 }
 
-// Cor de identidade de cada tipo — a mesma ordem categórica usada em toda a app.
+// Cor de identidade de cada tipo: a mesma ordem categórica usada em toda a app.
 function classeTipo(tipo: string) {
   if (tipo === 'cliente') return 'teal'
   if (tipo === 'fornecedor') return 'ambar'
@@ -122,7 +122,7 @@ function classeTipo(tipo: string) {
 }
 
 // --- Estatísticas do contacto seleccionado ---------------------------------
-// Nada disto vem de um único endpoint "resumo de pessoa" (não existe) — é
+// Nada disto vem de um único endpoint "resumo de pessoa" (não existe), é
 // composto a partir do que já existe: GET /vendas e /compras já aceitam
 // ?pessoa_id=, e o saldo em dívida vem de GET /pessoas?com_saldo=1.
 interface StatsContacto {
@@ -153,7 +153,7 @@ async function carregarStatsContacto(c: Pessoa) {
     }
     await Promise.all(pedidos)
   } catch {
-    // Estatísticas são só um extra informativo — uma falha aqui não deve incomodar o utilizador.
+    // Estatísticas são só um extra informativo: uma falha aqui não deve incomodar o utilizador.
   } finally {
     statsSeleccionado.value.aCarregar = false
   }
@@ -256,7 +256,7 @@ async function guardar() {
 }
 
 // --- Desactivar contacto -----------------------------------------------
-// DELETE /pessoas/{id} só desactiva (nunca apaga) — confirmação simples
+// DELETE /pessoas/{id} só desactiva (nunca apaga), confirmação simples
 // em duas etapas, sem diálogo nativo do browser.
 const aConfirmarDesactivar = ref(false)
 const aDesactivar = ref(false)
