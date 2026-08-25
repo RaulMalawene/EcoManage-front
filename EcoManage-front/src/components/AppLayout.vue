@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ICONES } from '@/utils/icones'
+import logoEcofenix from '@/assets/logo-icon.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -49,14 +50,8 @@ async function sair() {
     <!-- Barra lateral -->
     <aside class="lateral" :class="{ 'lateral--aberta': menuAberto }">
       <div class="lateral__marca">
-        <div class="logo-mini">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="19" height="19">
-            <path
-              d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"
-            />
-          </svg>
-        </div>
-        <span>Jay Recicly</span>
+        <img :src="logoEcofenix" alt="EcoFênix" class="logo-mini" />
+        <span>EcoFênix</span>
       </div>
 
       <nav class="lateral__nav" aria-label="Navegação principal">
@@ -78,7 +73,7 @@ async function sair() {
         </template>
       </nav>
 
-      <div class="lateral__rodape">© {{ new Date().getFullYear() }} Jay Recicly</div>
+      <div class="lateral__rodape">© {{ new Date().getFullYear() }} EcoFênix</div>
     </aside>
 
     <!-- Conteúdo -->
@@ -98,7 +93,7 @@ async function sair() {
           <div class="avatar">{{ (auth.utilizador?.nome || 'U').charAt(0).toUpperCase() }}</div>
           <div class="topo__info">
             <strong>{{ auth.utilizador?.nome || 'A carregar…' }}</strong>
-            <small>{{ auth.utilizador?.perfil_rotulo || 'Jay Recicly' }}</small>
+            <small>{{ auth.utilizador?.perfil_rotulo || 'EcoFênix' }}</small>
           </div>
           <button
             class="sair-btn"
@@ -167,14 +162,9 @@ async function sair() {
 }
 
 .logo-mini {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--cor-primaria-600);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 

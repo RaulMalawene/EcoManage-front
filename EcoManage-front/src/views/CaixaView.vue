@@ -127,7 +127,7 @@ async function exportar() {
     <div class="cabecalho">
       <div>
         <h1>Livro-caixa</h1>
-        <p>Consulta todas as entradas e saídas financeiras da Jay Recicly.</p>
+        <p>Consulta todas as entradas e saídas financeiras da EcoFênix.</p>
       </div>
       <div class="cabecalho__accoes">
         <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">

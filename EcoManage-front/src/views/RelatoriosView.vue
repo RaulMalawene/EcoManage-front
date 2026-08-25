@@ -344,7 +344,7 @@ const opcoesEvolucao = computed<ChartOptions<'line'>>(() => ({
     <div class="cabecalho">
       <div>
         <h1>Relatórios Executivos</h1>
-        <p>Analise o desempenho financeiro e operacional da Jay Recicly.</p>
+        <p>Analise o desempenho financeiro e operacional da EcoFênix.</p>
       </div>
       <div class="cabecalho__accoes">
         <div class="periodo">

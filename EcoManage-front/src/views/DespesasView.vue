@@ -223,7 +223,7 @@ async function guardar() {
     <div class="cabecalho">
       <div>
         <h1>Gestão de Despesas</h1>
-        <p>Registo e categorização das saídas de caixa da Jay Recicly.</p>
+        <p>Registo e categorização das saídas de caixa da EcoFênix.</p>
       </div>
       <div class="cabecalho__accoes">
         <button type="button" class="botao-fantasma" :disabled="aExportar" @click="exportar">

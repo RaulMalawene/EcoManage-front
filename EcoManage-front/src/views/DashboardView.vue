@@ -301,7 +301,7 @@ async function guardarStock() {
       <section class="hero">
         <div class="hero__texto">
           <h1>Bem-vindo{{ primeiroNome ? `, ${primeiroNome}` : '' }}</h1>
-          <p>Aqui está o resumo financeiro e operacional da Jay Recicly para hoje, {{ hoje }}.</p>
+          <p>Aqui está o resumo financeiro e operacional da EcoFênix para hoje, {{ hoje }}.</p>
         </div>
       </section>
 

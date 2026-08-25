@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import logoEcofenix from '@/assets/logo-ecofenix.png'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -49,13 +50,8 @@ async function submeter() {
     <!-- Painel de marca (visível em ecrãs largos) -->
     <section class="painel-marca" aria-hidden="true">
       <div class="painel-marca__conteudo">
-        <div class="painel-marca__logo">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path
-              d="M12 21c-4.5-3-8-6.5-8-11a6 6 0 0 1 11-3.3A6 6 0 0 1 20 10c0 4.5-3.5 8-8 11Z"
-            />
-          </svg>
-          <span>Jay Recicly</span>
+        <div class="painel-marca__logo-card">
+          <img :src="logoEcofenix" alt="EcoFênix — Reciclagem &amp; Coleta" class="painel-marca__imagem" />
         </div>
         <h1>Gestão simples para operações mais sustentáveis.</h1>
         <p>Pessoas, materiais e compras: tudo num só lugar, pronto para a tua equipa.</p>
@@ -66,14 +62,7 @@ async function submeter() {
     <section class="painel-formulario">
       <div class="cartao-formulario">
         <div class="cabecalho-mobile">
-          <div class="painel-marca__logo painel-marca__logo--escuro">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path
-                d="M12 21c-4.5-3-8-6.5-8-11a6 6 0 0 1 11-3.3A6 6 0 0 1 20 10c0 4.5-3.5 8-8 11Z"
-              />
-            </svg>
-            <span>Jay Recicly</span>
-          </div>
+          <img :src="logoEcofenix" alt="EcoFênix — Reciclagem &amp; Coleta" class="cabecalho-mobile__imagem" />
         </div>
 
         <h2>Iniciar sessão</h2>
@@ -159,40 +148,53 @@ async function submeter() {
 }
 
 .painel-marca__conteudo {
-  max-width: 26rem;
+  max-width: 24rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 1.75rem;
+  text-align: center;
 }
 
-.painel-marca__logo {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.02em;
+/* O logo é a peça central do painel: um cartão branco bem visível, para
+   as cores da marca (incluindo o verde do "ECO") nunca se misturarem
+   com o gradiente verde de fundo. */
+.painel-marca__logo-card {
+  background: rgb(255 255 255 / 0.97);
+  border-radius: 1.5rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 24px 48px -12px rgb(10 30 20 / 0.45);
+}
+
+.painel-marca__imagem {
+  display: block;
+  width: 15rem;
+  max-width: 100%;
+  height: auto;
 }
 
 .painel-marca h1 {
-  font-size: 1.9rem;
-  line-height: 1.25;
+  font-size: 1.7rem;
+  line-height: 1.3;
   font-weight: 600;
 }
 
 .painel-marca p {
-  color: rgb(255 255 255 / 0.85);
+  color: rgb(255 255 255 / 0.88);
   font-size: 1rem;
   line-height: 1.5;
 }
 
 .cabecalho-mobile {
   display: none;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
 }
 
-.painel-marca__logo--escuro {
-  color: var(--cor-primaria-700);
+.cabecalho-mobile__imagem {
+  height: 5.5rem;
+  width: auto;
+  max-width: 100%;
 }
 
 /* ---------- painel do formulário ---------- */
