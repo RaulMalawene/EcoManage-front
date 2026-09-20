@@ -305,28 +305,30 @@ async function guardarVenda() {
         </div>
         <p v-else-if="vendasFiltradas.length === 0" class="vazio">Ainda não há vendas registadas.</p>
 
-        <table v-else class="tabela">
-          <thead>
-            <tr>
-              <th>Ref.</th>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Materiais</th>
-              <th class="ao-fim">Total</th>
-              <th class="ao-fim">Lucro</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="v in vendasFiltradas" :key="v.id">
-              <td class="ref nowrap">{{ refVenda(v.id) }}</td>
-              <td class="nowrap">{{ dataCurta(v.data) }}</td>
-              <td>{{ v.cliente }}</td>
-              <td class="materiais">{{ materiaisResumo(v) }}</td>
-              <td class="ao-fim nowrap">{{ mt(v.total) }}</td>
-              <td class="ao-fim nowrap valor--lucro">{{ mt(v.lucro) }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="tabela-wrap">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Ref.</th>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Materiais</th>
+                <th class="ao-fim">Total</th>
+                <th class="ao-fim">Lucro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="v in vendasFiltradas" :key="v.id">
+                <td class="ref nowrap">{{ refVenda(v.id) }}</td>
+                <td class="nowrap">{{ dataCurta(v.data) }}</td>
+                <td>{{ v.cliente }}</td>
+                <td class="materiais">{{ materiaisResumo(v) }}</td>
+                <td class="ao-fim nowrap">{{ mt(v.total) }}</td>
+                <td class="ao-fim nowrap valor--lucro">{{ mt(v.lucro) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div v-if="!aCarregar && paginacao.total > 0" class="paginacao">
           <span class="paginacao__info">

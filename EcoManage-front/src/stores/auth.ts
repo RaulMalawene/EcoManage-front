@@ -97,6 +97,26 @@ export const useAuthStore = defineStore('auth', () => {
     erro.value = null
   }
 
+  /**
+   * Atualiza os dados de perfil (nome/email) exibidos na app.
+   *
+   * TODO(backend): o backend ainda não tem nenhuma rota para gravar isto
+   * (confirmado por `php artisan route:list` — só existem `POST /login`,
+   * `GET /me` e `POST /logout`; não há `PUT/PATCH /me` nem `/users/{id}`).
+   * Por isso esta função só atualiza o estado local (e por consequência o
+   * que aparece no topo da app) — nada é persistido no servidor, e um
+   * refresh de página repõe os dados originais vindos de `GET /me`.
+   * Assim que o endpoint existir, troca o bloco abaixo por uma chamada real:
+   *
+   *   const resposta = await api.put('/me', dados)
+   *   utilizador.value = resposta.data.utilizador
+   */
+  async function atualizarPerfil(dados: { nome: string; email: string | null }) {
+    if (!utilizador.value) return false
+    utilizador.value = { ...utilizador.value, nome: dados.nome, email: dados.email }
+    return true
+  }
+
   return {
     token,
     utilizador,
@@ -107,5 +127,6 @@ export const useAuthStore = defineStore('auth', () => {
     carregarUtilizador,
     sair,
     limparErro,
+    atualizarPerfil,
   }
 })

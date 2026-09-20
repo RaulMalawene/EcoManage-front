@@ -270,6 +270,7 @@ form {
   width: 100%;
   padding: 0.65rem 0.8rem;
   font-size: 0.95rem;
+  font-family: inherit;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-sm);
   background: var(--cor-superficie);

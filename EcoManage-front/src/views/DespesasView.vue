@@ -305,30 +305,32 @@ async function guardar() {
         </div>
         <p v-else-if="despesasFiltradas.length === 0" class="vazio">Ainda não há despesas registadas.</p>
 
-        <table v-else class="tabela">
-          <thead>
-            <tr>
-              <th>Ref.</th>
-              <th>Descrição</th>
-              <th>Categoria</th>
-              <th>Data</th>
-              <th class="ao-fim">Valor</th>
-              <th class="ao-centro">Grupo DRE</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in despesasFiltradas" :key="d.id">
-              <td class="ref nowrap">{{ refDespesa(d.id) }}</td>
-              <td class="forte">{{ d.descricao }}</td>
-              <td><span class="etiqueta-cat">{{ d.categoria }}</span></td>
-              <td class="nowrap">{{ dataCurta(d.data) }}</td>
-              <td class="ao-fim nowrap">{{ mt(d.valor) }}</td>
-              <td class="ao-centro">
-                <span class="etiqueta" :class="`etiqueta--${classeGrupo(d.grupo_dre)}`">{{ d.grupo_dre_rotulo }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="tabela-wrap">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Ref.</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Data</th>
+                <th class="ao-fim">Valor</th>
+                <th class="ao-centro">Grupo DRE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="d in despesasFiltradas" :key="d.id">
+                <td class="ref nowrap">{{ refDespesa(d.id) }}</td>
+                <td class="forte">{{ d.descricao }}</td>
+                <td><span class="etiqueta-cat">{{ d.categoria }}</span></td>
+                <td class="nowrap">{{ dataCurta(d.data) }}</td>
+                <td class="ao-fim nowrap">{{ mt(d.valor) }}</td>
+                <td class="ao-centro">
+                  <span class="etiqueta" :class="`etiqueta--${classeGrupo(d.grupo_dre)}`">{{ d.grupo_dre_rotulo }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div v-if="!aCarregar && paginacao.total > 0" class="paginacao">
           <span class="paginacao__info">A mostrar {{ despesasFiltradas.length }} de {{ paginacao.total }} despesas</span>

@@ -341,26 +341,28 @@ async function guardarCompra() {
         </div>
         <p v-else-if="comprasFiltradas.length === 0" class="vazio">Ainda não há compras registadas.</p>
 
-        <table v-else class="tabela">
-          <thead>
-            <tr>
-              <th>Ref.</th>
-              <th>Data</th>
-              <th>Fornecedor</th>
-              <th>Materiais</th>
-              <th class="ao-fim">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="c in comprasFiltradas" :key="c.id">
-              <td class="ref nowrap">{{ refCompra(c.id) }}</td>
-              <td class="nowrap">{{ dataCurta(c.data) }}</td>
-              <td class="forte">{{ c.fornecedor }}</td>
-              <td class="materiais">{{ materiaisResumo(c) }}</td>
-              <td class="ao-fim nowrap">{{ mt(c.total) }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="tabela-wrap">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Ref.</th>
+                <th>Data</th>
+                <th>Fornecedor</th>
+                <th>Materiais</th>
+                <th class="ao-fim">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in comprasFiltradas" :key="c.id">
+                <td class="ref nowrap">{{ refCompra(c.id) }}</td>
+                <td class="nowrap">{{ dataCurta(c.data) }}</td>
+                <td class="forte">{{ c.fornecedor }}</td>
+                <td class="materiais">{{ materiaisResumo(c) }}</td>
+                <td class="ao-fim nowrap">{{ mt(c.total) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div v-if="!aCarregar && paginacao.total > 0" class="paginacao">
           <span class="paginacao__info">

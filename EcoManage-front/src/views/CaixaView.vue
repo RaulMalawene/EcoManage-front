@@ -205,7 +205,8 @@ async function exportar() {
       </div>
       <p v-else-if="movimentosFiltrados.length === 0" class="vazio">Sem movimentos neste período.</p>
 
-      <table v-else class="tabela">
+      <div v-else class="tabela-wrap">
+      <table class="tabela">
         <thead>
           <tr>
             <th>Data</th>
@@ -231,6 +232,7 @@ async function exportar() {
           </tr>
         </tbody>
       </table>
+      </div>
 
       <!-- Paginação -->
       <div v-if="!aCarregar && paginacao.total > 0" class="paginacao">

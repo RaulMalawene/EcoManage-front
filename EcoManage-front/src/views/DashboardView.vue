@@ -355,28 +355,30 @@ async function guardarStock() {
             <p>Clientes com dívidas pendentes ou em atraso</p>
           </div>
           <p v-if="devedores.length === 0" class="vazio">Sem dívidas por liquidar.</p>
-          <table v-else class="tabela">
-            <thead>
-              <tr>
-                <th>Devedor</th>
-                <th>Montante</th>
-                <th>Vencimento</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="d in devedores.slice(0, 5)" :key="d.id">
-                <td>{{ d.pessoa }}</td>
-                <td>{{ mt(d.saldo_devedor) }}</td>
-                <td>{{ d.data_vencimento || '-' }}</td>
-                <td>
-                  <span class="etiqueta" :class="`etiqueta--${estadoDevedor(d.estado).classe}`">
-                    {{ estadoDevedor(d.estado).texto }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div v-else class="tabela-wrap">
+            <table class="tabela">
+              <thead>
+                <tr>
+                  <th>Devedor</th>
+                  <th>Montante</th>
+                  <th>Vencimento</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in devedores.slice(0, 5)" :key="d.id">
+                  <td>{{ d.pessoa }}</td>
+                  <td>{{ mt(d.saldo_devedor) }}</td>
+                  <td>{{ d.data_vencimento || '-' }}</td>
+                  <td>
+                    <span class="etiqueta" :class="`etiqueta--${estadoDevedor(d.estado).classe}`">
+                      {{ estadoDevedor(d.estado).texto }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div class="painel-bloco">

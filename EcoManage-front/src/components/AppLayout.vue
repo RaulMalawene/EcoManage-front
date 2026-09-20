@@ -4,12 +4,14 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ICONES } from '@/utils/icones'
 import logoEcofenix from '@/assets/logo-icon.png'
+import EditarPerfilModal from '@/components/EditarPerfilModal.vue'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 const menuAberto = ref(false)
 const aSair = ref(false)
+const modalPerfilAberto = ref(false)
 
 // Itens do menu. 'pronto: false' marca telas ainda por construir:
 // aparecem esbatidas e não navegam, para o dono ver o mapa completo
@@ -90,11 +92,19 @@ async function sair() {
         </div>
 
         <div class="topo__utilizador">
-          <div class="avatar">{{ (auth.utilizador?.nome || 'U').charAt(0).toUpperCase() }}</div>
-          <div class="topo__info">
-            <strong>{{ auth.utilizador?.nome || 'A carregar…' }}</strong>
-            <small>{{ auth.utilizador?.perfil_rotulo || 'EcoFênix' }}</small>
-          </div>
+          <button
+            type="button"
+            class="perfil-btn"
+            title="Editar perfil"
+            aria-label="Editar perfil"
+            @click="modalPerfilAberto = true"
+          >
+            <span class="avatar">{{ (auth.utilizador?.nome || 'U').charAt(0).toUpperCase() }}</span>
+            <span class="topo__info">
+              <strong>{{ auth.utilizador?.nome || 'A carregar…' }}</strong>
+              <small>{{ auth.utilizador?.perfil_rotulo || 'EcoFênix' }}</small>
+            </span>
+          </button>
           <button
             class="sair-btn"
             type="button"
@@ -118,6 +128,8 @@ async function sair() {
         <slot />
       </main>
     </div>
+
+    <EditarPerfilModal :aberto="modalPerfilAberto" @fechar="modalPerfilAberto = false" />
   </div>
 </template>
 
@@ -280,6 +292,24 @@ async function sair() {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.perfil-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: -4px;
+  border-radius: var(--raio-sm);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  min-width: 0;
+}
+.perfil-btn:hover {
+  background: var(--cor-fundo);
 }
 
 .avatar {

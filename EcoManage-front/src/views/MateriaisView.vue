@@ -392,45 +392,47 @@ async function guardarQuebra() {
         </div>
         <p v-else-if="materiaisFiltrados.length === 0" class="vazio">Ainda não há materiais registados.</p>
 
-        <table v-else class="tabela">
-          <thead>
-            <tr>
-              <th>Ref.</th>
-              <th>Material</th>
-              <th class="ao-fim">Stock atual</th>
-              <th class="ao-fim">Limite venda</th>
-              <th class="ao-fim">Preço/kg</th>
-              <th class="ao-centro">Estado</th>
-              <th class="ao-centro">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="m in materiaisFiltrados" :key="m.id">
-              <td class="ref nowrap">{{ refMaterial(m.id) }}</td>
-              <td>
-                <div class="material-nome">
-                  <span class="material-ponto"></span>
-                  {{ m.nome }}
-                </div>
-                <div class="barra-mini">
-                  <div class="barra-mini__fill" :class="estado(m).classe" :style="{ width: progresso(m) + '%' }"></div>
-                </div>
-              </td>
-              <td class="ao-fim forte nowrap">{{ kg(m.stock_kg) }} kg</td>
-              <td class="ao-fim cinza nowrap">{{ m.limite_alerta_kg ? kg(m.limite_alerta_kg) + ' kg' : '-' }}</td>
-              <td class="ao-fim nowrap">{{ mt(m.preco_venda_kg) }}</td>
-              <td class="ao-centro">
-                <span class="etiqueta" :class="`etiqueta--${estado(m).classe}`">{{ estado(m).texto }}</span>
-              </td>
-              <td class="ao-centro">
-                <div class="acoes-linha">
-                  <button type="button" class="btn-linha" @click="abrirModalStock(m)">+ Stock</button>
-                  <button type="button" class="btn-linha btn-linha--vermelho" @click="abrirModalQuebra(m)">Quebra</button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-else class="tabela-wrap">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Ref.</th>
+                <th>Material</th>
+                <th class="ao-fim">Stock atual</th>
+                <th class="ao-fim">Limite venda</th>
+                <th class="ao-fim">Preço/kg</th>
+                <th class="ao-centro">Estado</th>
+                <th class="ao-centro">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="m in materiaisFiltrados" :key="m.id">
+                <td class="ref nowrap">{{ refMaterial(m.id) }}</td>
+                <td>
+                  <div class="material-nome">
+                    <span class="material-ponto"></span>
+                    {{ m.nome }}
+                  </div>
+                  <div class="barra-mini">
+                    <div class="barra-mini__fill" :class="estado(m).classe" :style="{ width: progresso(m) + '%' }"></div>
+                  </div>
+                </td>
+                <td class="ao-fim forte nowrap">{{ kg(m.stock_kg) }} kg</td>
+                <td class="ao-fim cinza nowrap">{{ m.limite_alerta_kg ? kg(m.limite_alerta_kg) + ' kg' : '-' }}</td>
+                <td class="ao-fim nowrap">{{ mt(m.preco_venda_kg) }}</td>
+                <td class="ao-centro">
+                  <span class="etiqueta" :class="`etiqueta--${estado(m).classe}`">{{ estado(m).texto }}</span>
+                </td>
+                <td class="ao-centro">
+                  <div class="acoes-linha">
+                    <button type="button" class="btn-linha" @click="abrirModalStock(m)">+ Stock</button>
+                    <button type="button" class="btn-linha btn-linha--vermelho" @click="abrirModalQuebra(m)">Quebra</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- Coluna lateral -->

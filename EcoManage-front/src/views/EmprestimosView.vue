@@ -400,7 +400,8 @@ async function guardarPagamento() {
       </div>
       <p v-else-if="emprestimosFiltrados.length === 0" class="vazio">Nenhum empréstimo encontrado.</p>
 
-      <table v-else class="tabela">
+      <div v-else class="tabela-wrap">
+      <table class="tabela">
         <thead>
           <tr>
             <th>Beneficiário</th>
@@ -467,6 +468,7 @@ async function guardarPagamento() {
           </tr>
         </tbody>
       </table>
+      </div>
 
       <div v-if="!aCarregar && paginacao.total > 0" class="paginacao">
         <span class="paginacao__info">A mostrar {{ emprestimosFiltrados.length }} de {{ paginacao.total }} registos</span>

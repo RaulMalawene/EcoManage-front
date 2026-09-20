@@ -426,9 +426,18 @@ a {
   cursor: not-allowed;
 }
 
-/* ---- Tabela genérica ---- */
+/* ---- Tabela genérica ----
+   `.tabela-wrap` é quem trata do scroll horizontal em ecrãs estreitos: a
+   tabela nunca deve forçar a página inteira a deslizar de lado, só a si
+   própria dentro do seu cartão. `min-width` garante que as colunas não
+   ficam espremidas ilegíveis antes disso acontecer. */
+.tabela-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .tabela {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
 }
 .tabela th {
@@ -634,9 +643,43 @@ a {
   .cabecalho {
     flex-direction: column;
   }
+  .cabecalho__accoes {
+    width: 100%;
+    flex-wrap: wrap;
+  }
   .painel-bloco__topo {
     flex-direction: column;
     align-items: stretch;
+  }
+  .painel-bloco {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cabecalho h1 {
+    font-size: 21px;
+  }
+  .cabecalho__accoes {
+    flex-direction: column;
+  }
+  .cabecalho__accoes .botao-primario,
+  .cabecalho__accoes .botao-secundario,
+  .cabecalho__accoes .botao-fantasma {
+    width: 100%;
+    justify-content: center;
+  }
+  .painel-bloco {
+    padding: 14px;
+  }
+  .card-kpi {
+    padding: 16px;
+  }
+  .modal-form {
+    padding: 16px;
+  }
+  .modal-cabecalho {
+    padding: 14px 16px;
   }
 }
 
