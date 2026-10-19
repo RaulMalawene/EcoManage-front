@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, reactive, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { Bar, Doughnut } from 'vue-chartjs'
 import type { ChartOptions, TooltipItem } from 'chart.js'
@@ -63,9 +63,45 @@ const cartoes = computed(() => {
     { rotulo: 'Saldo disponível', valor: d.saldo_caixa, cor: 'verde', icone: 'caixa' },
     { rotulo: 'Total emprestado', valor: d.total_em_divida, cor: 'ambar', icone: 'emprestimos' },
     { rotulo: 'Valor em stock', valor: d.valor_stock, cor: 'teal', icone: 'materiais' },
-    { rotulo: 'Lucro do mês', valor: d.mes_corrente?.lucro_liquido, cor: 'destaque', icone: 'relatorios' },
+    {
+      rotulo: 'Lucro do mês',
+      valor: d.mes_corrente?.lucro_liquido,
+      // mês em prejuízo pinta o cartão de vermelho em vez do verde-floresta
+      cor: (d.mes_corrente?.lucro_liquido ?? 0) < 0 ? 'prejuizo' : 'destaque',
+      icone: 'relatorios',
+    },
   ]
 })
+
+// Contagem animada dos valores dos cartões (de 0, ou do valor anterior,
+// até ao novo). Sem animação para quem pede movimento reduzido.
+const valoresAnimados = ref<number[]>([])
+let rafContagem = 0
+
+watch(
+  cartoes,
+  (lista) => {
+    cancelAnimationFrame(rafContagem)
+    const destinos = lista.map((c) => c.valor ?? 0)
+    const reduzido = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduzido || destinos.length === 0) {
+      valoresAnimados.value = destinos
+      return
+    }
+    const origens = destinos.map((_, i) => valoresAnimados.value[i] ?? 0)
+    const duracao = 900
+    const inicio = performance.now()
+    const passo = (agora: number) => {
+      const t = Math.min((agora - inicio) / duracao, 1)
+      const suave = 1 - Math.pow(1 - t, 3) // ease-out cúbico
+      valoresAnimados.value = destinos.map((d, i) => origens[i]! + (d - origens[i]!) * suave)
+      if (t < 1) rafContagem = requestAnimationFrame(passo)
+    }
+    rafContagem = requestAnimationFrame(passo)
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => cancelAnimationFrame(rafContagem))
 
 // Composição de stock por material (valor imobilizado): dados que já
 // vinham em GET /materiais, sem precisar de nenhum endpoint novo. Mostra os
@@ -305,13 +341,23 @@ async function guardarStock() {
         </div>
       </section>
 
-      <section class="cartoes">
-        <div v-for="c in cartoes" :key="c.rotulo" class="card-kpi" :class="`card-kpi--${c.cor}`">
+      <section class="cartoes cartoes--painel">
+        <div
+          v-for="(c, i) in cartoes"
+          :key="c.rotulo"
+          class="card-kpi"
+          :class="`card-kpi--${c.cor}`"
+          :style="{ '--ordem': i }"
+        >
+          <!-- decoração: anel que ecoa o círculo do logo + ícone gigante em marca d'água -->
+          <span class="card-kpi__anel" aria-hidden="true"></span>
+          <span class="card-kpi__marca" aria-hidden="true" v-html="ICONES[c.icone]"></span>
+
           <div class="card-kpi__topo">
             <span class="card-kpi__rotulo">{{ c.rotulo }}</span>
-            <span class="card-kpi__icone" :class="`card-kpi__icone--${c.cor}`" v-html="ICONES[c.icone]"></span>
+            <span class="card-kpi__icone" v-html="ICONES[c.icone]"></span>
           </div>
-          <strong class="card-kpi__valor" :class="`card-kpi__valor--${c.cor}`">{{ mt(c.valor) }}</strong>
+          <strong class="card-kpi__valor" :aria-label="mt(c.valor)">{{ mt(valoresAnimados[i] ?? c.valor) }}</strong>
         </div>
       </section>
 
@@ -513,6 +559,191 @@ async function guardarStock() {
 </template>
 
 <style scoped>
+/* =====================================================================
+ * Cartões de KPI do painel — versão "pintada": cada cartão é um bloco
+ * de cor sólida da marca (sem bordas), com um anel que ecoa o círculo
+ * do logo e o ícone em marca d'água. Só se aplica aqui; as outras telas
+ * continuam com os cartões claros de main.css.
+ * =================================================================== */
+.cartoes--painel {
+  gap: 18px;
+}
+
+.cartoes--painel .card-kpi {
+  --fundo: linear-gradient(140deg, var(--cor-primaria-500), var(--cor-primaria-700));
+  --sombra-cor: 22 125 69;
+
+  isolation: isolate;
+  min-height: 136px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px;
+  border: none;
+  border-radius: 18px;
+  background: var(--fundo);
+  color: #fff;
+  box-shadow: 0 14px 30px -18px rgb(var(--sombra-cor) / 0.85);
+  /* "backwards" (e não "both"): depois de entrar, a animação larga o
+     transform e o hover volta a funcionar */
+  animation: cartao-entrar 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation-delay: calc(var(--ordem, 0) * 90ms);
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.25s ease;
+}
+
+/* brilho que atravessa o cartão no hover (substitui o friso de main.css) */
+.cartoes--painel .card-kpi::before {
+  display: block;
+  inset: 0;
+  height: auto;
+  z-index: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.18) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.8s ease;
+  pointer-events: none;
+}
+
+.cartoes--painel .card-kpi:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 40px -20px rgb(var(--sombra-cor) / 0.95);
+}
+
+.cartoes--painel .card-kpi:hover::before {
+  transform: translateX(120%);
+}
+
+/* --- paleta: tudo deriva do verde da marca + o laranja do logo --- */
+.cartoes--painel .card-kpi--verde {
+  --fundo: linear-gradient(140deg, #22a861 0%, var(--cor-primaria-700) 100%);
+  --sombra-cor: 22 125 69;
+}
+
+.cartoes--painel .card-kpi--ambar {
+  --fundo: linear-gradient(140deg, #d9772a 0%, #a8501a 100%);
+  --sombra-cor: 168 80 26;
+}
+
+.cartoes--painel .card-kpi--teal {
+  --fundo: linear-gradient(140deg, #13a394 0%, var(--cor-teal-700) 100%);
+  --sombra-cor: 12 118 109;
+}
+
+/* cartão herói: verde-floresta profundo com uma brasa laranja ao canto */
+.cartoes--painel .card-kpi--destaque {
+  --fundo:
+    radial-gradient(120% 90% at 100% 100%, rgb(255 122 47 / 0.35), transparent 55%),
+    linear-gradient(140deg, #14432c 0%, #0b2418 100%);
+  --sombra-cor: 11 36 24;
+}
+
+.cartoes--painel .card-kpi--prejuizo {
+  --fundo: linear-gradient(140deg, #e05a45 0%, #a8301f 100%);
+  --sombra-cor: 168 48 31;
+}
+
+/* --- conteúdo --- */
+.cartoes--painel .card-kpi__topo,
+.cartoes--painel .card-kpi__valor {
+  position: relative;
+  z-index: 1;
+}
+
+.cartoes--painel .card-kpi__rotulo {
+  color: rgb(255 255 255 / 0.82);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.cartoes--painel .card-kpi__icone {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.18);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cartoes--painel .card-kpi:hover .card-kpi__icone {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.cartoes--painel .card-kpi__valor {
+  font-size: 25px;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+/* --- decoração --- */
+.card-kpi__anel {
+  position: absolute;
+  z-index: 0;
+  width: 170px;
+  aspect-ratio: 1;
+  right: -60px;
+  top: -70px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  box-shadow:
+    0 0 0 18px rgb(255 255 255 / 0.05),
+    0 0 0 36px rgb(255 255 255 / 0.03);
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+
+.card-kpi:hover .card-kpi__anel {
+  transform: scale(1.12);
+}
+
+.card-kpi__marca {
+  position: absolute;
+  z-index: 0;
+  right: -14px;
+  bottom: -22px;
+  color: #fff;
+  opacity: 0.1;
+  transform: rotate(-12deg);
+  transition:
+    transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.card-kpi__marca :deep(svg) {
+  width: 104px;
+  height: 104px;
+  stroke-width: 1.4;
+}
+
+.card-kpi:hover .card-kpi__marca {
+  opacity: 0.16;
+  transform: rotate(-4deg) translateY(-4px);
+}
+
+@keyframes cartao-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartoes--painel .card-kpi,
+  .cartoes--painel .card-kpi::before,
+  .card-kpi__anel,
+  .card-kpi__marca,
+  .cartoes--painel .card-kpi__icone {
+    animation: none;
+    transition: none;
+  }
+}
+
 .botao-tentar {
   margin-top: 4px;
   padding: 0.5rem 1.1rem;
