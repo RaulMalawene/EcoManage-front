@@ -533,25 +533,6 @@ const opcoesEvolucao = computed<ChartOptions<'line'>>(() => ({
   font-weight: 700;
 }
 
-/* Cartão-destaque em alerta: o mesmo tratamento do card-kpi--destaque
-   (gradiente cheio, texto branco), mas em tons de vermelho para o prejuízo. */
-.card-kpi--destaque-alerta {
-  background: linear-gradient(135deg, #8a3420, var(--cor-erro));
-  border-color: transparent;
-}
-.card-kpi--destaque-alerta::before {
-  display: none;
-}
-.card-kpi--destaque-alerta .card-kpi__rotulo {
-  color: rgb(255 255 255 / 0.85);
-}
-.card-kpi--destaque-alerta .card-kpi__valor {
-  color: #fff;
-}
-.card-kpi--destaque-alerta .card-kpi__nota {
-  color: rgb(255 255 255 / 0.75);
-}
-
 .grelha {
   display: grid;
   grid-template-columns: 1fr 340px;

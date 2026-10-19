@@ -341,16 +341,14 @@ async function guardarStock() {
         </div>
       </section>
 
-      <section class="cartoes cartoes--painel">
+      <section class="cartoes">
         <div
           v-for="(c, i) in cartoes"
           :key="c.rotulo"
           class="card-kpi"
           :class="`card-kpi--${c.cor}`"
-          :style="{ '--ordem': i }"
         >
-          <!-- decoração: anel que ecoa o círculo do logo + ícone gigante em marca d'água -->
-          <span class="card-kpi__anel" aria-hidden="true"></span>
+          <!-- ícone gigante em marca d'água -->
           <span class="card-kpi__marca" aria-hidden="true" v-html="ICONES[c.icone]"></span>
 
           <div class="card-kpi__topo">
@@ -559,147 +557,11 @@ async function guardarStock() {
 </template>
 
 <style scoped>
-/* =====================================================================
- * Cartões de KPI do painel — versão "pintada": cada cartão é um bloco
- * de cor sólida da marca (sem bordas), com um anel que ecoa o círculo
- * do logo e o ícone em marca d'água. Só se aplica aqui; as outras telas
- * continuam com os cartões claros de main.css.
- * =================================================================== */
-.cartoes--painel {
-  gap: 18px;
-}
-
-.cartoes--painel .card-kpi {
-  --fundo: linear-gradient(140deg, var(--cor-primaria-500), var(--cor-primaria-700));
-  --sombra-cor: 22 125 69;
-
-  isolation: isolate;
-  min-height: 136px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 22px;
-  border: none;
-  border-radius: 18px;
-  background: var(--fundo);
-  color: #fff;
-  box-shadow: 0 14px 30px -18px rgb(var(--sombra-cor) / 0.85);
-  /* "backwards" (e não "both"): depois de entrar, a animação larga o
-     transform e o hover volta a funcionar */
-  animation: cartao-entrar 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
-  animation-delay: calc(var(--ordem, 0) * 90ms);
-  transition:
-    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
-    box-shadow 0.25s ease;
-}
-
-/* brilho que atravessa o cartão no hover (substitui o friso de main.css) */
-.cartoes--painel .card-kpi::before {
-  display: block;
-  inset: 0;
-  height: auto;
-  z-index: 0;
-  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.18) 50%, transparent 70%);
-  transform: translateX(-120%);
-  transition: transform 0.8s ease;
-  pointer-events: none;
-}
-
-.cartoes--painel .card-kpi:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 22px 40px -20px rgb(var(--sombra-cor) / 0.95);
-}
-
-.cartoes--painel .card-kpi:hover::before {
-  transform: translateX(120%);
-}
-
-/* --- paleta: tudo deriva do verde da marca + o laranja do logo --- */
-.cartoes--painel .card-kpi--verde {
-  --fundo: linear-gradient(140deg, #22a861 0%, var(--cor-primaria-700) 100%);
-  --sombra-cor: 22 125 69;
-}
-
-.cartoes--painel .card-kpi--ambar {
-  --fundo: linear-gradient(140deg, #d9772a 0%, #a8501a 100%);
-  --sombra-cor: 168 80 26;
-}
-
-.cartoes--painel .card-kpi--teal {
-  --fundo: linear-gradient(140deg, #13a394 0%, var(--cor-teal-700) 100%);
-  --sombra-cor: 12 118 109;
-}
-
-/* cartão herói: verde-floresta profundo com uma brasa laranja ao canto */
-.cartoes--painel .card-kpi--destaque {
-  --fundo:
-    radial-gradient(120% 90% at 100% 100%, rgb(255 122 47 / 0.35), transparent 55%),
-    linear-gradient(140deg, #14432c 0%, #0b2418 100%);
-  --sombra-cor: 11 36 24;
-}
-
-.cartoes--painel .card-kpi--prejuizo {
-  --fundo: linear-gradient(140deg, #e05a45 0%, #a8301f 100%);
-  --sombra-cor: 168 48 31;
-}
-
-/* --- conteúdo --- */
-.cartoes--painel .card-kpi__topo,
-.cartoes--painel .card-kpi__valor {
-  position: relative;
-  z-index: 1;
-}
-
-.cartoes--painel .card-kpi__rotulo {
-  color: rgb(255 255 255 / 0.82);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-}
-
-.cartoes--painel .card-kpi__icone {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: rgb(255 255 255 / 0.18);
-  color: #fff;
-  backdrop-filter: blur(4px);
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.cartoes--painel .card-kpi:hover .card-kpi__icone {
-  transform: rotate(-8deg) scale(1.08);
-}
-
-.cartoes--painel .card-kpi__valor {
-  font-size: 25px;
-  letter-spacing: -0.02em;
-  color: #fff;
-}
-
-/* --- decoração --- */
-.card-kpi__anel {
-  position: absolute;
-  z-index: 0;
-  width: 170px;
-  aspect-ratio: 1;
-  right: -60px;
-  top: -70px;
-  border-radius: 50%;
-  border: 1px solid rgb(255 255 255 / 0.22);
-  box-shadow:
-    0 0 0 18px rgb(255 255 255 / 0.05),
-    0 0 0 36px rgb(255 255 255 / 0.03);
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-  pointer-events: none;
-}
-
-.card-kpi:hover .card-kpi__anel {
-  transform: scale(1.12);
-}
-
+/* Ícone gigante em marca d'água no canto dos cartões de KPI do painel
+   (o resto do visual dos cartões vem de main.css). */
 .card-kpi__marca {
   position: absolute;
-  z-index: 0;
+  z-index: -1;
   right: -14px;
   bottom: -22px;
   color: #fff;
@@ -722,24 +584,8 @@ async function guardarStock() {
   transform: rotate(-4deg) translateY(-4px);
 }
 
-@keyframes cartao-entrar {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .cartoes--painel .card-kpi,
-  .cartoes--painel .card-kpi::before,
-  .card-kpi__anel,
-  .card-kpi__marca,
-  .cartoes--painel .card-kpi__icone {
-    animation: none;
+  .card-kpi__marca {
     transition: none;
   }
 }
