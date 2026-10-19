@@ -50,9 +50,36 @@ async function carregar() {
 
 onMounted(carregar)
 
-const hoje = computed(() =>
-  new Date().toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-)
+// "segunda-feira, 19 de outubro" — com a primeira letra em maiúscula
+const hojeExtenso = (() => {
+  const texto = new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+})()
+
+// Saudação e ícone consoante a hora do dia
+const periodo = (() => {
+  const hora = new Date().getHours()
+  if (hora >= 5 && hora < 12)
+    return {
+      chave: 'manha',
+      saudacao: 'Bom dia',
+      icone:
+        '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg>',
+    }
+  if (hora >= 12 && hora < 18)
+    return {
+      chave: 'tarde',
+      saudacao: 'Boa tarde',
+      icone:
+        '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17a5 5 0 0 1 10 0M12 4v3M4.9 9.9l1.4 1.4M19.1 9.9l-1.4 1.4M2.5 17h2M19.5 17h2M5 20.5h14"/></svg>',
+    }
+  return {
+    chave: 'noite',
+    saudacao: 'Boa noite',
+    icone:
+      '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>',
+  }
+})()
 
 const primeiroNome = computed(() => auth.utilizador?.nome?.split(' ')[0] || '')
 
@@ -323,6 +350,15 @@ async function guardarStock() {
   <AppLayout>
     <template #caminho>Painel / Visão Geral</template>
 
+    <!-- Saudação compacta (fora do v-if: aparece logo, mesmo enquanto os dados carregam) -->
+    <header class="saudacao">
+      <span class="saudacao__icone" :class="`saudacao__icone--${periodo.chave}`" aria-hidden="true" v-html="periodo.icone"></span>
+      <div>
+        <h1>{{ periodo.saudacao }}{{ primeiroNome ? `, ${primeiroNome}` : '' }}</h1>
+        <p><span class="saudacao__data">{{ hojeExtenso }}</span> · aqui está o resumo da EcoFênix.</p>
+      </div>
+    </header>
+
     <div v-if="aCarregar" class="estado">
       <span class="spinner" aria-hidden="true"></span>
       <p>A carregar o painel…</p>
@@ -334,13 +370,6 @@ async function guardarStock() {
     </div>
 
     <template v-else>
-      <section class="hero">
-        <div class="hero__texto">
-          <h1>Bem-vindo{{ primeiroNome ? `, ${primeiroNome}` : '' }}</h1>
-          <p>Aqui está o resumo financeiro e operacional da EcoFênix para hoje, {{ hoje }}.</p>
-        </div>
-      </section>
-
       <section class="cartoes">
         <div
           v-for="(c, i) in cartoes"
@@ -605,22 +634,76 @@ async function guardarStock() {
   background: rgb(217 67 46 / 0.14);
 }
 
-.hero {
-  background: linear-gradient(120deg, var(--cor-primaria-700), var(--cor-primaria-500));
-  border-radius: var(--raio);
-  padding: 32px;
-  color: #fff;
+/* Saudação compacta: ícone do período do dia + nome + data, no mesmo
+   registo visual do cabeçalho das outras telas. */
+.saudacao {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 22px;
+  animation: saudacao-entrar 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
 }
-.hero h1 {
-  font-size: 26px;
-  margin: 0 0 8px;
+.saudacao h1 {
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 3px;
+  color: var(--cor-texto);
 }
-.hero p {
+.saudacao p {
   margin: 0;
-  opacity: 0.9;
   font-size: 14px;
-  max-width: 520px;
+  color: var(--cor-texto-suave);
+}
+.saudacao__data {
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+.saudacao__icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+}
+.saudacao__icone--manha {
+  background: var(--cor-ambar-50);
+  color: var(--cor-ambar-600);
+}
+.saudacao__icone--manha :deep(svg) {
+  animation: girar-lento 18s linear infinite;
+}
+.saudacao__icone--tarde {
+  background: #fdf0e6;
+  color: #c4561a;
+}
+.saudacao__icone--noite {
+  background: var(--cor-indigo-50);
+  color: var(--cor-indigo-600);
+}
+
+@keyframes saudacao-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes girar-lento {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .saudacao,
+  .saudacao__icone--manha :deep(svg) {
+    animation: none;
+  }
 }
 
 .graficos,
